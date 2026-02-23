@@ -145,7 +145,21 @@ function Connect-ToGraph {
 }
 #endregion
 
+#region Data collection
+function Get-AllCAPolicies {
+    Write-Host "Retrieving Conditional Access policies..." -ForegroundColor Cyan
+
+    $policies = Get-MgIdentityConditionalAccessPolicy -All `
+        -Property id, displayName, state, createdDateTime, modifiedDateTime, templateId, `
+                  conditions, grantControls, sessionControls
+
+    Write-Host "Retrieved $($policies.Count) policies." -ForegroundColor Green
+    return $policies
+}
+#endregion
+
 #region Main
 Assert-GraphModule
-$context = Connect-ToGraph -Env $Environment -Upn $UserPrincipalName -Flow $AuthFlow
+$context  = Connect-ToGraph -Env $Environment -Upn $UserPrincipalName -Flow $AuthFlow
+$policies = Get-AllCAPolicies
 #endregion
