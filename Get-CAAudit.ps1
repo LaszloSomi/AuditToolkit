@@ -42,6 +42,7 @@
     A JSON or CSV file written to OutputPath named:
     CA-Export-{TenantId}-{Environment}-{Timestamp}.json|csv
 #>
+#Requires -Version 7.2
 [CmdletBinding()]
 param (
     [ValidateSet('Commercial', 'GCC', 'GCCH', 'DoD')]
@@ -115,12 +116,12 @@ function Assert-GraphModule {
 #region Authentication
 function Connect-ToGraph {
     param(
-        [string]$Env,
+        [string]$EnvironmentName,
         [string]$Upn,
         [string]$Flow
     )
 
-    $config = Resolve-Environment $Env
+    $config = Resolve-Environment $EnvironmentName
 
     $connectParams = @{
         Environment = $config.GraphEnvironment
@@ -132,7 +133,7 @@ function Connect-ToGraph {
         $connectParams['UseDeviceAuthentication'] = $true
     }
 
-    Write-Host "Connecting to Microsoft Graph ($Env)..." -ForegroundColor Cyan
+    Write-Host "Connecting to Microsoft Graph ($EnvironmentName)..." -ForegroundColor Cyan
     Connect-MgGraph @connectParams
 
     $context = Get-MgContext
@@ -149,17 +150,67 @@ function Connect-ToGraph {
 function Get-AllCAPolicies {
     Write-Host "Retrieving Conditional Access policies..." -ForegroundColor Cyan
 
-    $policies = Get-MgIdentityConditionalAccessPolicy -All `
-        -Property id, displayName, state, createdDateTime, modifiedDateTime, templateId, `
-                  conditions, grantControls, sessionControls
+    $policies = @(Get-MgIdentityConditionalAccessPolicy -All)
 
     Write-Host "Retrieved $($policies.Count) policies." -ForegroundColor Green
     return $policies
+}
+
+function Resolve-DirectoryObjects {
+    param([string[]]$Ids)
+
+    $wellKnown = @('All', 'None', 'GuestsOrExternalUsers', '00000000-0000-0000-0000-000000000000')
+    $realIds   = $Ids | Where-Object { $_ -notin $wellKnown -and $_ -match '^[0-9a-f-]{36}$' }
+
+    if (-not $realIds) { return @{} }
+
+    $map = @{}
+    $batches = [System.Linq.Enumerable]::Chunk([string[]]$realIds, 20)
+    foreach ($batch in $batches) {
+        $filter = ($batch | ForEach-Object { "id eq '$_'" }) -join ' or '
+        try {
+            $objects = Get-MgDirectoryObject -Filter $filter -Property id, displayName `
+                -ErrorAction SilentlyContinue
+            foreach ($obj in $objects) {
+                $map[$obj.Id] = $obj.AdditionalProperties['displayName'] ?? $obj.Id
+            }
+        }
+        catch {
+            Write-Verbose "Could not resolve batch of IDs: $_"
+        }
+    }
+    return $map
+}
+
+function Resolve-PolicyIds {
+    param($Policies)
+
+    Write-Host "Resolving directory object display names..." -ForegroundColor Cyan
+
+    $allIds = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($policy in $Policies) {
+        $u = $policy.Conditions.Users
+        if ($null -ne $u) {
+            @($u.IncludeUsers + $u.ExcludeUsers + $u.IncludeGroups + $u.ExcludeGroups +
+              $u.IncludeRoles + $u.ExcludeRoles) |
+                Where-Object { $_ } |
+                ForEach-Object { [void]$allIds.Add($_) }
+        }
+        $a = $policy.Conditions.Applications
+        if ($null -ne $a) {
+            @($a.IncludeApplications + $a.ExcludeApplications) |
+                Where-Object { $_ } |
+                ForEach-Object { [void]$allIds.Add($_) }
+        }
+    }
+
+    return Resolve-DirectoryObjects -Ids ([string[]]$allIds)
 }
 #endregion
 
 #region Main
 Assert-GraphModule
-$context  = Connect-ToGraph -Env $Environment -Upn $UserPrincipalName -Flow $AuthFlow
+$context  = Connect-ToGraph -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
 $policies = Get-AllCAPolicies
+$idMap    = Resolve-PolicyIds -Policies $policies
 #endregion
