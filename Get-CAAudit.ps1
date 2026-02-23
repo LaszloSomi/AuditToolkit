@@ -112,6 +112,40 @@ function Assert-GraphModule {
 }
 #endregion
 
+#region Authentication
+function Connect-ToGraph {
+    param(
+        [string]$Env,
+        [string]$Upn,
+        [string]$Flow
+    )
+
+    $config = Resolve-Environment $Env
+
+    $connectParams = @{
+        Environment = $config.GraphEnvironment
+        Scopes      = @('Policy.Read.All', 'Directory.Read.All')
+        NoWelcome   = $true
+    }
+
+    if ($Flow -eq 'DeviceCode') {
+        $connectParams['UseDeviceAuthentication'] = $true
+    }
+
+    Write-Host "Connecting to Microsoft Graph ($Env)..." -ForegroundColor Cyan
+    Connect-MgGraph @connectParams
+
+    $context = Get-MgContext
+    if ($context.Account -ne $Upn) {
+        Write-Warning "Signed in as '$($context.Account)' but expected '$Upn'. Proceeding."
+    }
+
+    Write-Host "Connected as: $($context.Account)" -ForegroundColor Green
+    return $context
+}
+#endregion
+
 #region Main
 Assert-GraphModule
+$context = Connect-ToGraph -Env $Environment -Upn $UserPrincipalName -Flow $AuthFlow
 #endregion
