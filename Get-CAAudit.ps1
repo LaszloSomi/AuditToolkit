@@ -92,10 +92,10 @@ $EnvironmentMap = @{
 }
 
 function Resolve-Environment {
-    param([string]$Env)
-    $config = $EnvironmentMap[$Env]
-    if (-not $config) { throw "Unknown environment: $Env" }
-    Write-Verbose "Environment '$Env': Graph=$($config.GraphEndpoint), Auth=$($config.AuthAuthority)"
+    param([string]$EnvironmentName)
+    $config = $EnvironmentMap[$EnvironmentName]
+    if ($null -eq $config) { throw "Unknown environment '$EnvironmentName'. Valid values: $($EnvironmentMap.Keys -join ', ')." }
+    Write-Verbose "Environment '$EnvironmentName': Graph=$($config.GraphEndpoint), Auth=$($config.AuthAuthority)"
     return $config
 }
 #endregion
