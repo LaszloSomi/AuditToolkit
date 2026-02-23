@@ -29,6 +29,18 @@
 
 .EXAMPLE
     .\Get-CAAudit.ps1 -Environment GCCH -UserPrincipalName admin@contoso.us -AuthFlow DeviceCode -OutputFormat CSV
+
+.NOTES
+    Requires the Microsoft.Graph PowerShell SDK.
+    Install: Install-Module Microsoft.Graph.Authentication, Microsoft.Graph.Identity.SignIns -Scope CurrentUser
+    Required Graph permission (delegated): Policy.Read.All
+    Recommended Graph permission (delegated): Directory.Read.All (to resolve object IDs to display names)
+    The authenticating account must hold one of: Conditional Access Administrator, Security Reader,
+    Security Administrator, Global Reader, or Global Administrator.
+
+.OUTPUTS
+    A JSON or CSV file written to OutputPath named:
+    CA-Export-{TenantId}-{Environment}-{Timestamp}.json|csv
 #>
 [CmdletBinding()]
 param (
@@ -36,6 +48,7 @@ param (
     [string]$Environment = 'Commercial',
 
     [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
     [string]$UserPrincipalName,
 
     [ValidateSet('Interactive', 'DeviceCode')]
@@ -44,7 +57,7 @@ param (
     [ValidateSet('JSON', 'CSV')]
     [string]$OutputFormat = 'JSON',
 
-    [string]$OutputPath = (Get-Location).Path
+    [string]$OutputPath = $PWD.Path
 )
 
 Set-StrictMode -Version Latest
