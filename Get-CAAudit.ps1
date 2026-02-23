@@ -278,14 +278,72 @@ function ConvertTo-ExportObject {
 }
 #endregion
 
+#region Output
+function Get-OutputFileName {
+    param([string]$TenantId, [string]$Env, [string]$Format)
+    $timestamp = Get-Date -Format 'yyyyMMddTHHmmssZ'
+    $ext = $Format.ToLower()
+    return "CA-Export-$TenantId-$Env-$timestamp.$ext"
+}
+
+function Write-JsonExport {
+    param($ExportPolicies, $Context, [string]$Env, [string]$FilePath)
+
+    $envelope = [ordered]@{
+        exportedBy  = $Context.Account
+        exportedAt  = (Get-Date -Format 'o')
+        environment = $Env
+        tenantId    = $Context.TenantId
+        policyCount = $ExportPolicies.Count
+        policies    = $ExportPolicies
+    }
+
+    $envelope | ConvertTo-Json -Depth 20 | Set-Content -Path $FilePath -Encoding UTF8
+    Write-Host "JSON export written: $FilePath" -ForegroundColor Green
+}
+
+function Write-CsvExport {
+    param($ExportPolicies, [string]$FilePath)
+
+    $rows = $ExportPolicies | ForEach-Object {
+        $row = [ordered]@{}
+        foreach ($key in $_.Keys) {
+            $val = $_[$key]
+            if ($null -eq $val) {
+                $row[$key] = ''
+            } elseif ($val -is [string] -or $val -is [bool] -or $val -is [datetime]) {
+                $row[$key] = $val
+            } else {
+                $row[$key] = $val | ConvertTo-Json -Compress -Depth 10
+            }
+        }
+        [PSCustomObject]$row
+    }
+
+    $rows | Export-Csv -Path $FilePath -NoTypeInformation -Encoding UTF8
+    Write-Host "CSV export written: $FilePath" -ForegroundColor Green
+}
+#endregion
+
 #region Main
 Assert-GraphModule
-$context        = Connect-ToGraph -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
+$context = Connect-ToGraph -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
 
 try {
     $policies       = Get-AllCAPolicies
     $idMap          = Resolve-PolicyIds -Policies $policies
     $exportPolicies = @($policies | ForEach-Object { ConvertTo-ExportObject -Policy $_ -IdMap $idMap })
+
+    $fileName = Get-OutputFileName -TenantId $context.TenantId -Env $Environment -Format $OutputFormat
+    $filePath = Join-Path -Path $OutputPath -ChildPath $fileName
+
+    if ($OutputFormat -eq 'JSON') {
+        Write-JsonExport -ExportPolicies $exportPolicies -Context $context -Env $Environment -FilePath $filePath
+    } else {
+        Write-CsvExport -ExportPolicies $exportPolicies -FilePath $filePath
+    }
+
+    Write-Host "`nAudit complete. $($policies.Count) policies exported to: $filePath" -ForegroundColor Cyan
 }
 finally {
     Disconnect-MgGraph | Out-Null
