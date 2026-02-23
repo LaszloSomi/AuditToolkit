@@ -62,3 +62,40 @@ param (
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+#region Environment configuration
+$EnvironmentMap = @{
+    Commercial = @{
+        GraphEnvironment = 'Global'
+        GraphEndpoint    = 'https://graph.microsoft.com'
+        AuthAuthority    = 'https://login.microsoftonline.com'
+        TokenAudience    = 'https://graph.microsoft.com'
+    }
+    GCC        = @{
+        GraphEnvironment = 'Global'
+        GraphEndpoint    = 'https://graph.microsoft.com'
+        AuthAuthority    = 'https://login.microsoftonline.com'
+        TokenAudience    = 'https://graph.microsoft.com'
+    }
+    GCCH       = @{
+        GraphEnvironment = 'USGov'
+        GraphEndpoint    = 'https://graph.microsoft.us'
+        AuthAuthority    = 'https://login.microsoftonline.us'
+        TokenAudience    = 'https://graph.microsoft.us'
+    }
+    DoD        = @{
+        GraphEnvironment = 'USGovDoD'
+        GraphEndpoint    = 'https://dod-graph.microsoft.us'
+        AuthAuthority    = 'https://login.microsoftonline.us'
+        TokenAudience    = 'https://dod-graph.microsoft.us'
+    }
+}
+
+function Resolve-Environment {
+    param([string]$Env)
+    $config = $EnvironmentMap[$Env]
+    if (-not $config) { throw "Unknown environment: $Env" }
+    Write-Verbose "Environment '$Env': Graph=$($config.GraphEndpoint), Auth=$($config.AuthAuthority)"
+    return $config
+}
+#endregion
