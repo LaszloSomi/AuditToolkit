@@ -99,3 +99,19 @@ function Resolve-Environment {
     return $config
 }
 #endregion
+
+#region Prerequisites
+function Assert-GraphModule {
+    $required = @('Microsoft.Graph.Authentication', 'Microsoft.Graph.Identity.SignIns')
+    foreach ($mod in $required) {
+        if (-not (Get-Module -ListAvailable -Name $mod)) {
+            throw "Required module '$mod' is not installed. Run: Install-Module $mod -Scope CurrentUser"
+        }
+    }
+    Write-Verbose "All required modules present."
+}
+#endregion
+
+#region Main
+Assert-GraphModule
+#endregion
