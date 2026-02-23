@@ -281,7 +281,7 @@ function ConvertTo-ExportObject {
 #region Output
 function Get-OutputFileName {
     param([string]$TenantId, [string]$Env, [string]$Format)
-    $timestamp = Get-Date -Format 'yyyyMMddTHHmmssZ'
+    $timestamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
     $ext = $Format.ToLower()
     return "CA-Export-$TenantId-$Env-$timestamp.$ext"
 }
@@ -314,7 +314,7 @@ function Write-CsvExport {
             } elseif ($val -is [string] -or $val -is [bool] -or $val -is [datetime]) {
                 $row[$key] = $val
             } else {
-                $row[$key] = $val | ConvertTo-Json -Compress -Depth 10
+                $row[$key] = $val | ConvertTo-Json -Compress -Depth 20
             }
         }
         [PSCustomObject]$row
