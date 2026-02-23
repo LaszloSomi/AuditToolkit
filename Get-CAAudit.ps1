@@ -127,6 +127,7 @@ function Connect-ToGraph {
         Environment = $config.GraphEnvironment
         Scopes      = @('Policy.Read.All', 'Directory.Read.All')
         NoWelcome   = $true
+        LoginHint   = $Upn
     }
 
     if ($Flow -eq 'DeviceCode') {
@@ -234,21 +235,21 @@ function ConvertTo-ExportObject {
         templateId       = $p.TemplateId
 
         # Assignments — users
-        includeUsers     = @($c.Users.IncludeUsers  | ForEach-Object { Resolve-Id $_ $IdMap })
-        excludeUsers     = @($c.Users.ExcludeUsers  | ForEach-Object { Resolve-Id $_ $IdMap })
-        includeGroups    = @($c.Users.IncludeGroups | ForEach-Object { Resolve-Id $_ $IdMap })
-        excludeGroups    = @($c.Users.ExcludeGroups | ForEach-Object { Resolve-Id $_ $IdMap })
-        includeRoles     = @($c.Users.IncludeRoles  | ForEach-Object { Resolve-Id $_ $IdMap })
-        excludeRoles     = @($c.Users.ExcludeRoles  | ForEach-Object { Resolve-Id $_ $IdMap })
-        includeGuestsOrExternalUsers = $c.Users.IncludeGuestsOrExternalUsers
-        excludeGuestsOrExternalUsers = $c.Users.ExcludeGuestsOrExternalUsers
+        includeUsers     = if ($null -ne $c.Users) { @($c.Users.IncludeUsers  | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        excludeUsers     = if ($null -ne $c.Users) { @($c.Users.ExcludeUsers  | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        includeGroups    = if ($null -ne $c.Users) { @($c.Users.IncludeGroups | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        excludeGroups    = if ($null -ne $c.Users) { @($c.Users.ExcludeGroups | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        includeRoles     = if ($null -ne $c.Users) { @($c.Users.IncludeRoles  | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        excludeRoles     = if ($null -ne $c.Users) { @($c.Users.ExcludeRoles  | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        includeGuestsOrExternalUsers = if ($null -ne $c.Users) { $c.Users.IncludeGuestsOrExternalUsers } else { $null }
+        excludeGuestsOrExternalUsers = if ($null -ne $c.Users) { $c.Users.ExcludeGuestsOrExternalUsers } else { $null }
         clientApplications           = $c.ClientApplications
 
         # Conditions
-        includeApplications = @($c.Applications.IncludeApplications | ForEach-Object { Resolve-Id $_ $IdMap })
-        excludeApplications = @($c.Applications.ExcludeApplications | ForEach-Object { Resolve-Id $_ $IdMap })
-        includeUserActions  = $c.Applications.IncludeUserActions
-        authenticationContextClassReferences = $c.Applications.IncludeAuthenticationContextClassReferences
+        includeApplications = if ($null -ne $c.Applications) { @($c.Applications.IncludeApplications | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        excludeApplications = if ($null -ne $c.Applications) { @($c.Applications.ExcludeApplications | ForEach-Object { Resolve-Id $_ $IdMap }) } else { @() }
+        includeUserActions  = if ($null -ne $c.Applications) { $c.Applications.IncludeUserActions } else { $null }
+        authenticationContextClassReferences = if ($null -ne $c.Applications) { $c.Applications.IncludeAuthenticationContextClassReferences } else { $null }
         clientAppTypes      = $c.ClientAppTypes
         platforms           = $c.Platforms
         deviceFilter        = if ($null -ne $c.Devices) { $c.Devices.DeviceFilter } else { $null }
@@ -327,6 +328,11 @@ function Write-CsvExport {
 
 #region Main
 Assert-GraphModule
+
+if (-not (Test-Path -Path $OutputPath -PathType Container)) {
+    throw "OutputPath '$OutputPath' does not exist or is not a directory."
+}
+
 $context = Connect-ToGraph -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
 
 try {
