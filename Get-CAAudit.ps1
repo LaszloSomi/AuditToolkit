@@ -208,9 +208,87 @@ function Resolve-PolicyIds {
 }
 #endregion
 
+#region Serialization
+function Resolve-Id {
+    param([string]$Id, [hashtable]$Map)
+    if ([string]::IsNullOrEmpty($Id)) { return $Id }
+    if ($Map.ContainsKey($Id)) { return "$Id ($($Map[$Id]))" }
+    return $Id
+}
+
+function ConvertTo-ExportObject {
+    param($Policy, [hashtable]$IdMap)
+
+    $p = $Policy
+    $c = $p.Conditions
+    $g = $p.GrantControls
+    $s = $p.SessionControls
+
+    return [ordered]@{
+        # Core metadata
+        id               = $p.Id
+        displayName      = $p.DisplayName
+        state            = $p.State
+        createdDateTime  = $p.CreatedDateTime
+        modifiedDateTime = $p.ModifiedDateTime
+        templateId       = $p.TemplateId
+
+        # Assignments — users
+        includeUsers     = @($c.Users.IncludeUsers  | ForEach-Object { Resolve-Id $_ $IdMap })
+        excludeUsers     = @($c.Users.ExcludeUsers  | ForEach-Object { Resolve-Id $_ $IdMap })
+        includeGroups    = @($c.Users.IncludeGroups | ForEach-Object { Resolve-Id $_ $IdMap })
+        excludeGroups    = @($c.Users.ExcludeGroups | ForEach-Object { Resolve-Id $_ $IdMap })
+        includeRoles     = @($c.Users.IncludeRoles  | ForEach-Object { Resolve-Id $_ $IdMap })
+        excludeRoles     = @($c.Users.ExcludeRoles  | ForEach-Object { Resolve-Id $_ $IdMap })
+        includeGuestsOrExternalUsers = $c.Users.IncludeGuestsOrExternalUsers
+        excludeGuestsOrExternalUsers = $c.Users.ExcludeGuestsOrExternalUsers
+        clientApplications           = $c.ClientApplications
+
+        # Conditions
+        includeApplications = @($c.Applications.IncludeApplications | ForEach-Object { Resolve-Id $_ $IdMap })
+        excludeApplications = @($c.Applications.ExcludeApplications | ForEach-Object { Resolve-Id $_ $IdMap })
+        includeUserActions  = $c.Applications.IncludeUserActions
+        authenticationContextClassReferences = $c.Applications.IncludeAuthenticationContextClassReferences
+        clientAppTypes      = $c.ClientAppTypes
+        platforms           = $c.Platforms
+        deviceFilter        = $c.Devices.DeviceFilter
+        locations           = $c.Locations
+        signInRiskLevels    = $c.SignInRiskLevels
+        userRiskLevels      = $c.UserRiskLevels
+        servicePrincipalRiskLevels = $c.ServicePrincipalRiskLevels
+        insiderRiskLevels   = $c.InsiderRiskLevels
+        authenticationFlows = $c.AuthenticationFlows
+
+        # Grant controls
+        grantOperator               = $g.Operator
+        grantBuiltInControls        = $g.BuiltInControls
+        authenticationStrength      = $g.AuthenticationStrength
+        termsOfUse                  = $g.TermsOfUse
+        customAuthenticationFactors = $g.CustomAuthenticationFactors
+
+        # Session controls
+        signInFrequency                 = $s.SignInFrequency
+        persistentBrowser               = $s.PersistentBrowser
+        applicationEnforcedRestrictions = $s.ApplicationEnforcedRestrictions
+        cloudAppSecurity                = $s.CloudAppSecurity
+        disableResilienceDefaults       = $s.DisableResilienceDefaults
+        continuousAccessEvaluation      = if ($null -ne $s) { $s.AdditionalProperties['continuousAccessEvaluation'] } else { $null }
+        secureSignInSession             = if ($null -ne $s) { $s.AdditionalProperties['secureSignInSession'] } else { $null }
+    }
+}
+#endregion
+
 #region Main
 Assert-GraphModule
-$context  = Connect-ToGraph -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
-$policies = Get-AllCAPolicies
-$idMap    = Resolve-PolicyIds -Policies $policies
+$context        = Connect-ToGraph -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
+
+try {
+    $policies       = Get-AllCAPolicies
+    $idMap          = Resolve-PolicyIds -Policies $policies
+    $exportPolicies = @($policies | ForEach-Object { ConvertTo-ExportObject -Policy $_ -IdMap $idMap })
+}
+finally {
+    Disconnect-MgGraph | Out-Null
+    Write-Verbose "Disconnected from Microsoft Graph."
+}
 #endregion
