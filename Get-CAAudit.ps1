@@ -251,7 +251,7 @@ function ConvertTo-ExportObject {
         authenticationContextClassReferences = $c.Applications.IncludeAuthenticationContextClassReferences
         clientAppTypes      = $c.ClientAppTypes
         platforms           = $c.Platforms
-        deviceFilter        = $c.Devices.DeviceFilter
+        deviceFilter        = if ($null -ne $c.Devices) { $c.Devices.DeviceFilter } else { $null }
         locations           = $c.Locations
         signInRiskLevels    = $c.SignInRiskLevels
         userRiskLevels      = $c.UserRiskLevels
@@ -260,18 +260,18 @@ function ConvertTo-ExportObject {
         authenticationFlows = $c.AuthenticationFlows
 
         # Grant controls
-        grantOperator               = $g.Operator
-        grantBuiltInControls        = $g.BuiltInControls
-        authenticationStrength      = $g.AuthenticationStrength
-        termsOfUse                  = $g.TermsOfUse
-        customAuthenticationFactors = $g.CustomAuthenticationFactors
+        grantOperator               = if ($null -ne $g) { $g.Operator }               else { $null }
+        grantBuiltInControls        = if ($null -ne $g) { $g.BuiltInControls }        else { $null }
+        authenticationStrength      = if ($null -ne $g) { $g.AuthenticationStrength } else { $null }
+        termsOfUse                  = if ($null -ne $g) { $g.TermsOfUse }             else { $null }
+        customAuthenticationFactors = if ($null -ne $g) { $g.CustomAuthenticationFactors } else { $null }
 
         # Session controls
-        signInFrequency                 = $s.SignInFrequency
-        persistentBrowser               = $s.PersistentBrowser
-        applicationEnforcedRestrictions = $s.ApplicationEnforcedRestrictions
-        cloudAppSecurity                = $s.CloudAppSecurity
-        disableResilienceDefaults       = $s.DisableResilienceDefaults
+        signInFrequency                 = if ($null -ne $s) { $s.SignInFrequency }                 else { $null }
+        persistentBrowser               = if ($null -ne $s) { $s.PersistentBrowser }               else { $null }
+        applicationEnforcedRestrictions = if ($null -ne $s) { $s.ApplicationEnforcedRestrictions } else { $null }
+        cloudAppSecurity                = if ($null -ne $s) { $s.CloudAppSecurity }                else { $null }
+        disableResilienceDefaults       = if ($null -ne $s) { $s.DisableResilienceDefaults }       else { $null }
         continuousAccessEvaluation      = if ($null -ne $s) { $s.AdditionalProperties['continuousAccessEvaluation'] } else { $null }
         secureSignInSession             = if ($null -ne $s) { $s.AdditionalProperties['secureSignInSession'] } else { $null }
     }
