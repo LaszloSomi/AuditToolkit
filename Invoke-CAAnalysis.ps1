@@ -103,7 +103,45 @@ function Test-AppIdMatch {
 #endregion Helpers
 
 #region Rules
-# (Rule functions added in Tasks 3–9)
+
+function Test-DirectBlock {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    $findings = @()
+    foreach ($policy in $Policies) {
+        if ($policy.state -ne 'enabled') { continue }
+
+        $controls = Get-BuiltInControls $policy.grantBuiltInControls
+        if ('block' -notin $controls) { continue }
+
+        # Policies scoped to user actions (includeApplications = null) are not app-access blocks.
+        if ($null -eq $policy.includeApplications) { continue }
+
+        $apps = if ($policy.includeApplications -is [string]) { @($policy.includeApplications) } else { @($policy.includeApplications) }
+        $appMatchAll     = 'All' -in $apps
+        $appMatchCopilot = $CopilotAppIds | Where-Object { Test-AppIdMatch -AppId $_ -Applications $policy.includeApplications } | Select-Object -First 1
+
+        if (-not ($appMatchAll -or $appMatchCopilot)) { continue }
+        if ($policy.includeUsers -ne 'All') { continue }
+
+        $scope = if ($appMatchAll) { 'all applications including Microsoft 365 Copilot' } else { 'Microsoft 365 Copilot' }
+        $findings += [PSCustomObject]@{
+            ruleId         = 'R1'
+            severity       = 'Critical'
+            policyId       = $policy.id
+            policyName     = $policy.displayName
+            policyState    = $policy.state
+            summary        = "Policy '$($policy.displayName)' blocks all users from accessing $scope."
+            detail         = "This policy grants the 'block' control for all users with application scope covering Microsoft 365 Copilot. Any user subject to this policy will be denied access to Copilot entirely."
+            recommendation = "Exclude Copilot application IDs from this policy's scope, add an exclusion group for Copilot-licensed users, or replace the block control with a conditional grant (e.g., MFA + compliant device)."
+        }
+    }
+    return $findings
+}
+
 #endregion Rules
 
 #region Report
