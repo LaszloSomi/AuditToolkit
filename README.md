@@ -1,0 +1,84 @@
+# AuditToolkit
+
+This toolkit checks your Microsoft 365 Conditional Access policies to make sure they won't block Microsoft 365 Copilot.
+
+It has two parts that work together:
+
+1. **The customer runs a script** that reads their Conditional Access policies and saves them to a file.
+2. **The analyst runs a second script** on that file to check for problems and produce a report.
+
+Nothing in your tenant is ever changed. Both scripts are read-only.
+
+---
+
+## I am a customer — what do I need to do?
+
+You need to run one script that exports your Conditional Access policies to a file and send that file to your Microsoft contact.
+
+👉 **Read [Customer Instructions.md](Customer%20Instructions.md) for step-by-step guidance.**
+
+**In short:**
+- You need PowerShell 7 and two Microsoft Graph modules installed (the guide walks you through this)
+- You run one command and sign in with your admin account
+- The script saves a `.json` file to your machine
+- You send that file to your Microsoft contact — that is all you need to do
+
+---
+
+## I am an analyst — what do I need to do?
+
+Once you have the export file from the customer, you run the analysis script on it. It checks the policies against seven rules and produces a Markdown report and a JSON findings file.
+
+👉 **Read [Admin Instructions.md](Admin%20Instructions.md) for step-by-step guidance.**
+
+**In short:**
+- You need PowerShell 7 — no Microsoft Graph modules required, no internet connection needed
+- You run one command pointing at the customer's export file
+- The script produces two files: a readable report (`.md`) and a machine-readable findings file (`.json`)
+- No changes are made to anything — it reads the file and writes a report, that is it
+
+---
+
+## What does the analysis check for?
+
+The analysis script checks every policy against seven rules:
+
+| Rule | What it looks for |
+|---|---|
+| 🔴 R1 — Direct Block | A policy that flat-out blocks users from accessing Copilot |
+| 🔴 R2 — Compliant Device Gate | A policy that requires a compliant device, which Copilot web experiences cannot satisfy |
+| 🟡 R3 — Sign-in Frequency | A policy that forces full re-authentication every session, breaking Copilot conversations |
+| 🟡 R4 — Report-Only Risk | A report-only policy that would cause R1, R2, or R3 problems if someone enables it |
+| 🟡 R5 — Token Protection | A policy using token binding, which Copilot does not support |
+| 🔵 R6 — MFA Coverage Gap | No MFA policy covering all users — Copilot requires MFA |
+| 🔵 R7 — Copilot App Scoping | A policy that explicitly names Copilot — flagged for review |
+
+🔴 Critical = Copilot will be blocked. Fix before enabling Copilot.
+🟡 Warning = Copilot may have problems. Review before enabling Copilot.
+🔵 Info = Worth knowing about, but no immediate action required.
+
+---
+
+## Files in this repo
+
+| File | What it is |
+|---|---|
+| `Get-CAAudit.ps1` | The script customers run to export their policies |
+| `Invoke-CAAnalysis.ps1` | The script analysts run to check the export for problems |
+| `Customer Instructions.md` | Step-by-step guide for customers running the export |
+| `Admin Instructions.md` | Step-by-step guide for analysts running the analysis |
+| `tests/` | Automated tests for the analysis script |
+
+---
+
+## Quick start — two commands
+
+**Customer (export):**
+```powershell
+.\Get-CAAudit.ps1 -UserPrincipalName admin@yourdomain.com
+```
+
+**Analyst (analyse):**
+```powershell
+.\Invoke-CAAnalysis.ps1 -InputPath ".\CA-Export-{filename}.json"
+```
