@@ -29,7 +29,7 @@ You need to run one script that exports your Conditional Access policies to a fi
 
 Once you have the export file from the customer, you run the analysis script on it. It checks the policies against seven rules and produces a Markdown report and a JSON findings file.
 
-👉 **Read [Admin Instructions.md](Admin%20Instructions.md) for step-by-step guidance.**
+👉 **Read [Admin Instructions.md](Analysis/Admin%20Instructions.md) for step-by-step guidance.**
 
 **In short:**
 - You need PowerShell 7 — no Microsoft Graph modules required, no internet connection needed
@@ -102,8 +102,8 @@ There is also a Microsoft 365 Copilot declarative agent that does the same analy
 |---|---|
 | `LogCollection/Get-CAAudit.ps1` | The script customers run to export their policies |
 | `LogCollection/Customer Instructions.md` | Step-by-step guide for customers running the export |
-| `Invoke-CAAnalysis.ps1` | The script analysts run to check the export for problems |
-| `Admin Instructions.md` | Step-by-step guide for analysts running the analysis |
+| `Analysis/Invoke-CAAnalysis.ps1` | The script analysts run to check the export for problems |
+| `Analysis/Admin Instructions.md` | Step-by-step guide for analysts running the analysis |
 | `copilot-agent/manifest.json` | Copilot Studio agent manifest |
 | `copilot-agent/instruction.txt` | Agent system prompt with all 7 rules |
 | `tests/` | Automated tests for the analysis script |
@@ -119,5 +119,5 @@ There is also a Microsoft 365 Copilot declarative agent that does the same analy
 
 **Analyst (analyse):**
 ```powershell
-.\Invoke-CAAnalysis.ps1 -InputPath ".\CA-Export-{filename}.json"
+.\Analysis\Invoke-CAAnalysis.ps1 -InputPath ".\CA-Export-{filename}.json"
 ```
