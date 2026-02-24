@@ -142,6 +142,39 @@ function Test-DirectBlock {
     return $findings
 }
 
+function Test-CompliantDeviceGate {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    $findings = @()
+    foreach ($policy in $Policies) {
+        if ($policy.state -ne 'enabled') { continue }
+
+        $controls = Get-BuiltInControls $policy.grantBuiltInControls
+        if ('compliantDevice' -notin $controls) { continue }
+
+        # If the operator is OR and mfa is an alternative, the user can satisfy
+        # the policy with MFA alone — compliant device is not strictly required.
+        if ($policy.grantOperator -eq 'OR' -and 'mfa' -in $controls) { continue }
+
+        if ($policy.includeApplications -ne 'All') { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'R2'
+            severity       = 'Critical'
+            policyId       = $policy.id
+            policyName     = $policy.displayName
+            policyState    = $policy.state
+            summary        = "Policy '$($policy.displayName)' requires a compliant device for all applications, which Copilot web experiences cannot satisfy."
+            detail         = "Microsoft 365 Copilot web experiences (copilot.microsoft.com) run in a browser and do not report device compliance status. Users accessing Copilot from these entry points will be blocked by this policy."
+            recommendation = "Add MFA as an OR alternative to compliant device (set grantOperator = OR with controls: compliantDevice + mfa), or exclude Copilot app IDs from this policy's scope."
+        }
+    }
+    return $findings
+}
+
 #endregion Rules
 
 #region Report
