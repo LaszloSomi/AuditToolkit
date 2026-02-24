@@ -15,7 +15,7 @@ Nothing in your tenant is ever changed. Both scripts are read-only.
 
 You need to run one script that exports your Conditional Access policies to a file and send that file to your Microsoft contact.
 
-👉 **Read [Customer Instructions.md](Customer%20Instructions.md) for step-by-step guidance.**
+👉 **Read [Customer Instructions.md](LogCollection/Customer%20Instructions.md) for step-by-step guidance.**
 
 **In short:**
 - You need PowerShell 7 and two Microsoft Graph modules installed (the guide walks you through this)
@@ -100,9 +100,9 @@ There is also a Microsoft 365 Copilot declarative agent that does the same analy
 
 | File | What it is |
 |---|---|
-| `Get-CAAudit.ps1` | The script customers run to export their policies |
+| `LogCollection/Get-CAAudit.ps1` | The script customers run to export their policies |
+| `LogCollection/Customer Instructions.md` | Step-by-step guide for customers running the export |
 | `Invoke-CAAnalysis.ps1` | The script analysts run to check the export for problems |
-| `Customer Instructions.md` | Step-by-step guide for customers running the export |
 | `Admin Instructions.md` | Step-by-step guide for analysts running the analysis |
 | `copilot-agent/manifest.json` | Copilot Studio agent manifest |
 | `copilot-agent/instruction.txt` | Agent system prompt with all 7 rules |
@@ -114,7 +114,7 @@ There is also a Microsoft 365 Copilot declarative agent that does the same analy
 
 **Customer (export):**
 ```powershell
-.\Get-CAAudit.ps1 -UserPrincipalName admin@yourdomain.com
+.\LogCollection\Get-CAAudit.ps1 -UserPrincipalName admin@yourdomain.com
 ```
 
 **Analyst (analyse):**
