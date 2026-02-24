@@ -242,23 +242,226 @@ function Test-ReportOnlyRisk {
     return $findings
 }
 
+function Test-TokenProtection {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    $findings = @()
+    foreach ($policy in $Policies) {
+        if ($policy.state -ne 'enabled') { continue }
+
+        $sss = $policy.secureSignInSession
+        if ($null -eq $sss) { continue }
+
+        $isEnabled = if ($null -ne $sss.IsEnabled) { [bool]$sss.IsEnabled }
+                     elseif ($null -ne $sss.isEnabled) { [bool]$sss.isEnabled }
+                     else { $true }
+
+        if (-not $isEnabled) { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'R5'
+            severity       = 'Warning'
+            policyId       = $policy.id
+            policyName     = $policy.displayName
+            policyState    = $policy.state
+            summary        = "Policy '$($policy.displayName)' enables token protection (secure sign-in session binding), which Microsoft 365 Copilot does not currently support."
+            detail         = "Token protection binds access tokens to a specific device using a cryptographic proof key. Microsoft 365 Copilot does not implement token binding and may fail to access protected resources when this control is enforced."
+            recommendation = "Exclude Microsoft 365 Copilot application IDs from this policy's scope, or verify with Microsoft support that Copilot supports token binding in your environment before enforcing."
+        }
+    }
+    return $findings
+}
+
+function Test-MfaCoverageGap {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    foreach ($policy in $Policies) {
+        if ($policy.state -ne 'enabled') { continue }
+        if ($policy.includeUsers -ne 'All') { continue }
+        if ($policy.includeApplications -ne 'All') { continue }
+
+        $controls = Get-BuiltInControls $policy.grantBuiltInControls
+        $hasMfa = 'mfa' -in $controls
+        $hasAuthStrength = ($null -ne $policy.authenticationStrength -and
+                            -not [string]::IsNullOrEmpty($policy.authenticationStrength.Id))
+
+        if ($hasMfa -or $hasAuthStrength) { return @() }
+    }
+
+    return @([PSCustomObject]@{
+        ruleId         = 'R6'
+        severity       = 'Info'
+        policyId       = $null
+        policyName     = '(no policy)'
+        policyState    = $null
+        summary        = 'No Conditional Access policy enforces MFA for all users and all applications.'
+        detail         = 'Microsoft 365 Copilot requires multi-factor authentication. Without a baseline MFA policy covering all users and all applications, users can access Copilot without completing MFA.'
+        recommendation = "Create or verify a CA policy with: state = enabled, includeUsers = All, includeApplications = All, grantBuiltInControls includes 'mfa' (or authenticationStrength set to a phishing-resistant method)."
+    })
+}
+
+function Test-CopilotAppScoping {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    $findings = @()
+    foreach ($policy in $Policies) {
+        $matched = @()
+        foreach ($id in $CopilotAppIds) {
+            if ((Test-AppIdMatch -AppId $id -Applications $policy.includeApplications) -or
+                (Test-AppIdMatch -AppId $id -Applications $policy.excludeApplications)) {
+                $matched += $id
+            }
+        }
+
+        if ($matched.Count -eq 0) { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'R7'
+            severity       = 'Info'
+            policyId       = $policy.id
+            policyName     = $policy.displayName
+            policyState    = $policy.state
+            summary        = "Policy '$($policy.displayName)' explicitly scopes Microsoft 365 Copilot app(s): $($matched -join ', ')."
+            detail         = "One or more known Microsoft 365 Copilot application IDs appear in this policy's include or exclude application list, meaning the policy specifically targets or exempts Copilot."
+            recommendation = "Review to confirm the scoping is intentional. If the policy was designed for other applications and Copilot was included inadvertently, consider removing it from the scope."
+        }
+    }
+    return $findings
+}
+
 #endregion Rules
 
 #region Report
-# (Write-AnalysisReport added in Task 10)
+
+function Write-AnalysisReport {
+    param(
+        [Parameter(Mandatory)] $Export,
+        [Parameter(Mandatory)] $Findings,
+        [Parameter(Mandatory)] [string]$OutputPath
+    )
+
+    $timestamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
+    $baseName  = "CA-Analysis-$($Export.tenantId)-$($Export.environment)-$timestamp"
+    $mdPath    = Join-Path $OutputPath "$baseName.md"
+    $jsonPath  = Join-Path $OutputPath "$baseName.json"
+
+    $criticalCount = @($Findings | Where-Object severity -eq 'Critical').Count
+    $warningCount  = @($Findings | Where-Object severity -eq 'Warning').Count
+    $infoCount     = @($Findings | Where-Object severity -eq 'Info').Count
+
+    $policiesWithFindings = @($Findings | Where-Object policyId | Select-Object -ExpandProperty policyId -Unique)
+    $cleanPolicies = @($Export.policies | Where-Object { $_.id -notin $policiesWithFindings })
+
+    # ── Markdown ──────────────────────────────────────────────────────────────
+    $sb = [System.Text.StringBuilder]::new()
+    [void]$sb.AppendLine('# CA Policy Analysis — Copilot Readiness')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine("**Tenant:** $($Export.tenantId)  |  **Environment:** $($Export.environment)")
+    [void]$sb.AppendLine("**Exported by:** $($Export.exportedBy)  |  **Analysed:** $(Get-Date -Format 'o')")
+    [void]$sb.AppendLine("**Policies analysed:** $($Export.policyCount)")
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Summary')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('| Severity | Count |')
+    [void]$sb.AppendLine('|---|---|')
+    [void]$sb.AppendLine("| 🔴 Critical | $criticalCount |")
+    [void]$sb.AppendLine("| 🟡 Warning | $warningCount |")
+    [void]$sb.AppendLine("| 🔵 Info | $infoCount |")
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Findings')
+    [void]$sb.AppendLine('')
+
+    if ($Findings.Count -eq 0) {
+        [void]$sb.AppendLine('_No issues found._')
+    } else {
+        $orderedFindings = @(
+            @($Findings | Where-Object severity -eq 'Critical')
+            @($Findings | Where-Object severity -eq 'Warning')
+            @($Findings | Where-Object severity -eq 'Info')
+        )
+        foreach ($f in $orderedFindings) {
+            $icon = switch ($f.severity) { 'Critical' { '🔴' } 'Warning' { '🟡' } default { '🔵' } }
+            [void]$sb.AppendLine("### $icon $($f.ruleId) — $($f.summary)")
+            [void]$sb.AppendLine('')
+            [void]$sb.AppendLine("**Policy:** $($f.policyName)  |  **State:** $($f.policyState ?? 'N/A')  |  **Severity:** $($f.severity)")
+            [void]$sb.AppendLine('')
+            [void]$sb.AppendLine($f.detail)
+            [void]$sb.AppendLine('')
+            [void]$sb.AppendLine("**Recommendation:** $($f.recommendation)")
+            [void]$sb.AppendLine('')
+        }
+    }
+
+    [void]$sb.AppendLine('## Policies With No Issues')
+    [void]$sb.AppendLine('')
+    if ($cleanPolicies.Count -eq 0) {
+        [void]$sb.AppendLine('_All policies had at least one finding._')
+    } else {
+        foreach ($p in $cleanPolicies) {
+            [void]$sb.AppendLine("- $($p.displayName)")
+        }
+    }
+
+    Set-Content -Path $mdPath -Value $sb.ToString() -Encoding UTF8
+    Write-Host "Markdown report written: $mdPath" -ForegroundColor Green
+
+    # ── JSON ──────────────────────────────────────────────────────────────────
+    $envelope = [ordered]@{
+        analysedBy   = 'Invoke-CAAnalysis.ps1'
+        analysedAt   = (Get-Date -Format 'o')
+        tenantId     = $Export.tenantId
+        environment  = $Export.environment
+        policyCount  = $Export.policyCount
+        findingCount = $Findings.Count
+        findings     = $Findings
+    }
+    $envelope | ConvertTo-Json -Depth 20 | Set-Content -Path $jsonPath -Encoding UTF8
+    Write-Host "JSON findings written:   $jsonPath" -ForegroundColor Green
+
+    return [PSCustomObject]@{
+        MarkdownPath = $mdPath
+        JsonPath     = $jsonPath
+    }
+}
+
 #endregion Report
 
 #region Main
-# Guard ensures the main execution block does not run when this script is dot-sourced
-# for Pester testing (InvocationName = '.' when dot-sourced).
 if ($MyInvocation.InvocationName -ne '.') {
     if (-not (Test-Path -Path $OutputPath -PathType Container)) {
         throw "OutputPath '$OutputPath' does not exist or is not a directory."
     }
 
     $export = Import-CAExport -Path $InputPath
-    Write-Host "Analysing $($export.policyCount) policies in tenant $($export.tenantId)..." -ForegroundColor Cyan
+    Write-Host "Analysing $($export.policyCount) policies in tenant $($export.tenantId) ($($export.environment))..." -ForegroundColor Cyan
 
-    # Rule execution and report writing are added as functions are implemented.
+    $findings = @()
+    $findings += @(Test-DirectBlock         -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+    $findings += @(Test-CompliantDeviceGate -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+    $findings += @(Test-SignInFrequency     -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+    $findings += @(Test-ReportOnlyRisk      -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+    $findings += @(Test-TokenProtection     -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+    $findings += @(Test-MfaCoverageGap      -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+    $findings += @(Test-CopilotAppScoping   -Policies $export.policies -CopilotAppIds $CopilotAppIds)
+
+    $severitySummary = ($findings | Group-Object severity | ForEach-Object { "$($_.Count) $($_.Name)" }) -join ', '
+    Write-Host "Found $($findings.Count) issue(s)$(if ($findings.Count -gt 0) { ": $severitySummary" })." `
+        -ForegroundColor $(if ($findings.Count -eq 0) { 'Green' } else { 'Yellow' })
+
+    $result = Write-AnalysisReport -Export $export -Findings $findings -OutputPath $OutputPath
+
+    Write-Host ''
+    Write-Host 'Analysis complete.' -ForegroundColor Cyan
+    Write-Host "  Markdown: $($result.MarkdownPath)"
+    Write-Host "  JSON:     $($result.JsonPath)"
 }
 #endregion Main
