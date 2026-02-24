@@ -127,7 +127,6 @@ function Connect-ToGraph {
         Environment = $config.GraphEnvironment
         Scopes      = @('Policy.Read.All', 'Directory.Read.All')
         NoWelcome   = $true
-        LoginHint   = $Upn
     }
 
     if ($Flow -eq 'DeviceCode') {
