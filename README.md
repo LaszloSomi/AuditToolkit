@@ -59,6 +59,43 @@ The analysis script checks every policy against seven rules:
 
 ---
 
+## I want to use the Copilot chat agent instead of the script
+
+There is also a Microsoft 365 Copilot declarative agent that does the same analysis inside Copilot chat. Instead of running a PowerShell script, you paste the export JSON directly into a Copilot conversation and the agent checks it for you.
+
+**Deploy it once, use it from Copilot chat forever.**
+
+### What you need
+
+- A Microsoft 365 Copilot licence
+- Access to [Copilot Studio](https://copilotstudio.microsoft.com)
+- The `copilot-agent/` folder from this repo
+
+### How to deploy
+
+1. **Download the agent files** — get `copilot-agent/manifest.json` and `copilot-agent/instruction.txt` from this repo onto your machine.
+
+2. **Create a zip file** — put both files into a zip. The zip must contain the files directly (not inside a subfolder):
+   ```
+   CA-Policy-Analyzer.zip
+   ├── manifest.json
+   └── instruction.txt
+   ```
+
+3. **Import into Copilot Studio**
+   - Go to [copilotstudio.microsoft.com](https://copilotstudio.microsoft.com)
+   - Click **Agents** in the left menu
+   - Click **Import**
+   - Upload your zip file
+
+4. **Publish** — once imported, click **Publish** to make it available in Microsoft 365 Copilot.
+
+5. **Use it** — open Microsoft 365 Copilot, find the **CA Policy Analyzer** agent in the agent store or use a direct link, and start a conversation. When asked, paste the contents of the customer's export `.json` file into the chat. The agent will analyse it and return its findings.
+
+> The agent uses the same seven rules as `Invoke-CAAnalysis.ps1`. The two tools are independent — you do not need one to use the other.
+
+---
+
 ## Files in this repo
 
 | File | What it is |
@@ -67,6 +104,8 @@ The analysis script checks every policy against seven rules:
 | `Invoke-CAAnalysis.ps1` | The script analysts run to check the export for problems |
 | `Customer Instructions.md` | Step-by-step guide for customers running the export |
 | `Admin Instructions.md` | Step-by-step guide for analysts running the analysis |
+| `copilot-agent/manifest.json` | Copilot Studio agent manifest |
+| `copilot-agent/instruction.txt` | Agent system prompt with all 7 rules |
 | `tests/` | Automated tests for the analysis script |
 
 ---
