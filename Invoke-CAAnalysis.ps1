@@ -175,6 +175,37 @@ function Test-CompliantDeviceGate {
     return $findings
 }
 
+function Test-SignInFrequency {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    $findings = @()
+    foreach ($policy in $Policies) {
+        if ($policy.state -ne 'enabled') { continue }
+
+        $sif = $policy.signInFrequency
+        if ($null -eq $sif) { continue }
+        if ($sif.IsEnabled -ne $true) { continue }
+        if ($sif.FrequencyInterval -ne 'everyTime') { continue }
+
+        if ($policy.includeApplications -ne 'All') { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'R3'
+            severity       = 'Warning'
+            policyId       = $policy.id
+            policyName     = $policy.displayName
+            policyState    = $policy.state
+            summary        = "Policy '$($policy.displayName)' forces full re-authentication every session for all applications, breaking Copilot continuity."
+            detail         = "Sign-in frequency set to 'Every time' requires full re-authentication at every new session. Microsoft 365 Copilot relies on persistent token lifetimes for a seamless conversational experience; this setting interrupts Copilot sessions and degrades usability."
+            recommendation = "Either exclude Copilot app IDs from this policy's scope, or change the sign-in frequency to a bounded interval (e.g., 1 hour or 8 hours) rather than 'Every time'."
+        }
+    }
+    return $findings
+}
+
 #endregion Rules
 
 #region Report
