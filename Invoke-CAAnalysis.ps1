@@ -206,6 +206,42 @@ function Test-SignInFrequency {
     return $findings
 }
 
+function Test-ReportOnlyRisk {
+    param(
+        [Parameter(Mandatory)] $Policies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]]$CopilotAppIds
+    )
+
+    $findings = @()
+    $reportOnlyPolicies = @($Policies | Where-Object { $_.state -eq 'enabledForReportingButNotEnforced' })
+
+    foreach ($policy in $reportOnlyPolicies) {
+        # Create a synthetic enabled copy via JSON round-trip to avoid mutating the original.
+        $simulatedJson = $policy | ConvertTo-Json -Depth 20
+        $simulated = $simulatedJson | ConvertFrom-Json
+        $simulated.state = 'enabled'
+
+        $wouldTrigger = @()
+        if (@(Test-DirectBlock          -Policies @($simulated) -CopilotAppIds $CopilotAppIds).Count -gt 0) { $wouldTrigger += 'R1 (Direct Block)' }
+        if (@(Test-CompliantDeviceGate  -Policies @($simulated) -CopilotAppIds $CopilotAppIds).Count -gt 0) { $wouldTrigger += 'R2 (Compliant Device Gate)' }
+        if (@(Test-SignInFrequency      -Policies @($simulated) -CopilotAppIds $CopilotAppIds).Count -gt 0) { $wouldTrigger += 'R3 (Sign-in Frequency)' }
+
+        if ($wouldTrigger.Count -eq 0) { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'R4'
+            severity       = 'Warning'
+            policyId       = $policy.id
+            policyName     = $policy.displayName
+            policyState    = $policy.state
+            summary        = "Report-only policy '$($policy.displayName)' would trigger $($wouldTrigger -join ', ') if switched to enforced."
+            detail         = "This policy is currently in report-only mode and is not enforcing its controls. Enabling it would create the Copilot-blocking issues listed above."
+            recommendation = "Before enabling this policy, review and apply the recommendations for the triggered rules. Consider excluding Copilot app IDs or adjusting controls before enforcement."
+        }
+    }
+    return $findings
+}
+
 #endregion Rules
 
 #region Report
