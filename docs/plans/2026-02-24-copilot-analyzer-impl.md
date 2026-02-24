@@ -2146,7 +2146,7 @@ git commit -m "chore: ignore CA-Analysis output files"
 AuditToolkit/
 ├── Get-CAAudit.ps1                     # collection script (existing)
 ├── Invoke-CAAnalysis.ps1               # NEW: offline analysis script
-├── RUNBOOK.md                          # existing customer docs
+├── Customer Instructions.md            # existing customer docs
 ├── CA-Audit-Script-Spec.md             # existing spec
 ├── copilot-agent/                      # NEW
 │   ├── manifest.json

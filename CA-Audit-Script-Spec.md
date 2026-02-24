@@ -75,7 +75,7 @@ The script must accept the following inputs:
 |-------------------|----------|-------------------|-----------------------------------------------------|
 | Environment       | No       | Commercial        | Target cloud: Commercial, GCC, GCCH, DoD            |
 | UserPrincipalName | Yes      | None              | Account used to authenticate                        |
-| AuthFlow          | No       | Interactive       | Authentication flow: `Interactive` or `DeviceCode`  |
+| AuthFlow          | No       | Interactive       | Authentication flow: prefer `Interactive` over `DeviceCode`  |
 | OutputFormat      | No       | JSON              | `JSON` or `CSV`                                     |
 | OutputPath        | No       | Current directory | File export location                                |
 
