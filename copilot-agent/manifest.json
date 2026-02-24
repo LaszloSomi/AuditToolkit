@@ -1,0 +1,13 @@
+{
+  "schema_version": "v2.1",
+  "name_for_human": "CA Policy Analyzer",
+  "description_for_human": "Analyzes Conditional Access policy exports for misconfigurations that could block Microsoft 365 Copilot.",
+  "namespace": "CAPolicyAnalyzer",
+  "capabilities": {
+    "conversation_starters": [
+      { "text": "Analyse my CA policy export for Copilot readiness" },
+      { "text": "Which policies could block Microsoft 365 Copilot?" },
+      { "text": "Are there report-only policies I should review before enabling?" }
+    ]
+  }
+}
