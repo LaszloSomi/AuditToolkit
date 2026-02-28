@@ -47,7 +47,7 @@ Once you have the export file(s) from the customer, run the relevant analysis sc
 
 ### Conditional Access analysis
 
-👉 **Read [Admin Instructions.md](Analysis/Admin%20Instructions.md) for step-by-step guidance.**
+👉 **Read [Invoke-CAAnalysis - Admin Instructions.md](Analysis/Invoke-CAAnalysis%20-%20Admin%20Instructions.md) for step-by-step guidance.**
 
 - Takes the customer's `CA-Export-*.json` file
 - Checks every CA policy against seven rules
@@ -140,7 +140,7 @@ There is also a Microsoft 365 Copilot declarative agent that does the Conditiona
 | `LogCollection/Get-PurviewAudit.ps1` | Exports Purview DLP, IRM, and audit settings from the tenant |
 | `LogCollection/Get-PurviewAudit - Customer Instructions.md` | Step-by-step guide for customers running the Purview export |
 | `Analysis/Invoke-CAAnalysis.ps1` | Analyses a CA export for Copilot-blocking misconfigurations |
-| `Analysis/Admin Instructions.md` | Step-by-step guide for analysts running the CA analysis |
+| `Analysis/Invoke-CAAnalysis - Admin Instructions.md` | Step-by-step guide for analysts running the CA analysis |
 | `Analysis/Invoke-PurviewAnalysis.ps1` | Analyses a Purview export for DSPM for AI policy gaps |
 | `Analysis/Invoke-PurviewAnalysis - Admin Instructions.md` | Step-by-step guide for analysts running the Purview analysis |
 | `Analysis/tests/` | Automated Pester tests for both analysis scripts |
