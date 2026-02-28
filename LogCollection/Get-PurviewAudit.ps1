@@ -187,7 +187,71 @@ function Get-IrmData {
 #endregion
 
 #region DSPM inventory
-# (placeholder — implemented in Task 6)
+
+# Known DSPM for AI policy definitions.
+# Each entry: canonicalName (the DSPM-created name), policyType, and a legacy prefix if applicable.
+$script:DspmPolicyDefinitions = @(
+    @{ canonicalName = 'DSPM for AI: Detect sensitive info added to AI sites';                                             policyType = 'DLP' }
+    @{ canonicalName = 'DSPM for AI - Block sensitive info from AI sites';                                                  policyType = 'DLP' }
+    @{ canonicalName = 'DSPM for AI - Block elevated risk users from submitting prompts to AI apps in Microsoft Edge';      policyType = 'DLP' }
+    @{ canonicalName = 'DSPM for AI - Block sensitive info from AI apps in Edge';                                           policyType = 'DLP' }
+    @{ canonicalName = 'DSPM for AI - Protect sensitive data from Copilot processing';                                      policyType = 'DLP' }
+    @{ canonicalName = 'DSPM for AI - Detect when users visit AI sites';                                                    policyType = 'IRM' }
+    @{ canonicalName = 'DSPM for AI - Detect risky AI usage';                                                               policyType = 'IRM' }
+    @{ canonicalName = 'DSPM for AI - Unethical behavior in AI apps';                                                       policyType = 'CommunicationCompliance' }
+)
+
+# Strips the leading "DSPM for AI" (or "Microsoft AI Hub") prefix to get the discriminating suffix.
+# Used to match the legacy prefix variant against canonical names.
+function Get-DspmSuffix {
+    param([string]$PolicyName)
+    # Remove canonical prefix
+    $name = $PolicyName -replace '^DSPM for AI\s*[-:]\s*', ''
+    # Remove legacy preview prefix
+    $name = $name -replace '^Microsoft AI Hub\s*[-:]\s*', ''
+    return $name.Trim()
+}
+
+function Get-DspmPolicyInventory {
+    param(
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $DlpPolicies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $IrmPolicies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $CommCompliancePolicies
+    )
+
+    $inventory = foreach ($def in $script:DspmPolicyDefinitions) {
+        $suffix  = Get-DspmSuffix $def.canonicalName
+        $matched = $null
+
+        switch ($def.policyType) {
+            'DLP' {
+                $matched = $DlpPolicies | Where-Object {
+                    (Get-DspmSuffix $_.Name) -eq $suffix
+                } | Select-Object -First 1
+            }
+            'IRM' {
+                $matched = $IrmPolicies | Where-Object {
+                    (Get-DspmSuffix $_.Name) -eq $suffix
+                } | Select-Object -First 1
+            }
+            'CommunicationCompliance' {
+                $matched = $CommCompliancePolicies | Where-Object {
+                    (Get-DspmSuffix $_.Name) -eq $suffix
+                } | Select-Object -First 1
+            }
+        }
+
+        [PSCustomObject]@{
+            policyName  = $def.canonicalName
+            policyType  = $def.policyType
+            detected    = ($null -ne $matched)
+            mode        = if ($null -ne $matched -and $def.policyType -eq 'DLP') { $matched.Mode }    else { $null }
+            enabled     = if ($null -ne $matched -and $def.policyType -eq 'DLP') { $matched.Enabled } else { $null }
+        }
+    }
+
+    return @($inventory)
+}
 #endregion
 
 #region Output
