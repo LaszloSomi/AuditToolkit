@@ -324,6 +324,42 @@ function Write-PurviewExport {
 
 #region Main
 if ($MyInvocation.InvocationName -ne '.') {
-    throw 'Script is not yet complete. See implementation plan.'
+    Assert-IppsModule
+
+    if (-not (Test-Path -Path $OutputPath -PathType Container)) {
+        throw "OutputPath '$OutputPath' does not exist or is not a directory."
+    }
+
+    $conn = Connect-ToIPPS -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
+
+    try {
+        $retentionPolicies = Get-AuditRetentionPolicies
+        $dlpData           = Get-DlpPolicies
+        $irmData           = Get-IrmData
+
+        # Build DSPM inventory from already-collected data (no additional network calls).
+        $allDlpPolicies = @($dlpData | ForEach-Object { $_.policy })
+        $dspmInventory  = Get-DspmPolicyInventory `
+            -DlpPolicies           $allDlpPolicies `
+            -IrmPolicies           $irmData.policies `
+            -CommCompliancePolicies $irmData.communicationCompliance
+
+        $result = Write-PurviewExport `
+            -Connection        $conn `
+            -Environment       $Environment `
+            -RetentionPolicies $retentionPolicies `
+            -DlpData           $dlpData `
+            -IrmData           $irmData `
+            -DspmInventory     $dspmInventory `
+            -OutputPath        $OutputPath
+
+        Write-Host ''
+        Write-Host 'Export complete.' -ForegroundColor Cyan
+        Write-Host "  JSON: $($result.JsonPath)"
+    }
+    finally {
+        Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+        Write-Verbose 'Disconnected from Security & Compliance PowerShell.'
+    }
 }
 #endregion
