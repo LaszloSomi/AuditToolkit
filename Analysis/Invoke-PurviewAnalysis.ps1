@@ -193,6 +193,36 @@ function Test-DlpCopilotCoverage {
         recommendation = 'Create or enable a DLP policy in Microsoft Purview that targets the CopilotInteractions or M365Copilot workload and set its mode to Enable.'
     })
 }
+
+function Test-IrmAiPolicyActive {
+    # T-12: RTM FR-I1
+    param(
+        [Parameter(Mandatory)] [AllowNull()] $InsiderRisk
+    )
+
+    $aiTemplates = @('RiskyAIUsage', 'DataLeak', 'DataLeakByPriorityUser', 'DataTheftByDepartingEmployee')
+
+    $active = $null
+    if ($null -ne $InsiderRisk -and $null -ne $InsiderRisk.policies) {
+        $active = @($InsiderRisk.policies) | Where-Object {
+            $_.PolicyStatus -eq 'Active' -and $_.PolicyTemplate -in $aiTemplates
+        } | Select-Object -First 1
+    }
+
+    if ($null -ne $active) {
+        return @()
+    }
+
+    return @([PSCustomObject]@{
+        ruleId         = 'I1'
+        severity       = 'Info'
+        policyName     = '(no active policy)'
+        policyType     = 'IRM'
+        summary        = 'No active Insider Risk Management policy uses an AI-relevant template.'
+        detail         = 'IRM policies with templates such as RiskyAIUsage, DataLeak, DataLeakByPriorityUser, or DataTheftByDepartingEmployee generate risk signals that DSPM for AI surfaces as AI-related insider risk. Without an active policy of this type, AI-related insider risk events are not scored or surfaced.'
+        recommendation = 'In Microsoft Purview, navigate to Insider Risk Management > Policies and create or activate a policy using the Risky AI usage, Data leak, or Data theft by departing employee template.'
+    })
+}
 #endregion Rules
 
 #region Report
