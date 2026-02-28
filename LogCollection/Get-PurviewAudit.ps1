@@ -125,7 +125,14 @@ function Connect-ToIPPS {
 #endregion
 
 #region Data collection
-# (placeholder — implemented in Tasks 3-5)
+function Get-AuditRetentionPolicies {
+    Write-Host 'Collecting audit log retention policies...' -ForegroundColor Cyan
+
+    $policies = @(Get-UnifiedAuditLogRetentionPolicy)
+
+    Write-Host "Retrieved $($policies.Count) retention policy(s)." -ForegroundColor Green
+    return $policies
+}
 #endregion
 
 #region DSPM inventory
