@@ -32,7 +32,7 @@ No additional PowerShell modules are required. Unlike `Get-CAAudit.ps1`, the ana
 
 ### 2. You need the export file from the customer
 
-Ask the customer to run `Get-CAAudit.ps1` using the instructions in **Customer Instructions.md** and send you the resulting file. The file will be named:
+Ask the customer to run `Get-CAAudit.ps1` using the instructions in **Get-CAAudit - Customer Instructions.md** and send you the resulting file. The file will be named:
 
 ```
 CA-Export-{TenantId}-{Environment}-{Timestamp}.json
