@@ -43,19 +43,29 @@ Exports your DLP policies, Insider Risk Management settings, and audit retention
 
 ## I am an analyst — what do I need to do?
 
-Once you have the export file(s) from the customer, use the analysis script or the Copilot agent to review them.
+Once you have the export file(s) from the customer, run the relevant analysis script. Both are fully offline — no modules, no internet connection, no tenant access required.
 
-👉 **Read [Admin Instructions.md](Analysis/Admin%20Instructions.md) for step-by-step guidance on the Conditional Access analysis script.**
+### Conditional Access analysis
 
-**In short:**
-- You need PowerShell 7 — no modules required, no internet connection needed
-- You run one command pointing at the customer's CA export file
-- The script produces a Markdown report and a JSON findings file
-- No changes are made to anything
+👉 **Read [Admin Instructions.md](Analysis/Admin%20Instructions.md) for step-by-step guidance.**
+
+- Takes the customer's `CA-Export-*.json` file
+- Checks every CA policy against seven rules
+- Produces a Markdown report and a JSON findings file
+
+### Purview Data Security analysis
+
+👉 **Read [Invoke-PurviewAnalysis - Admin Instructions.md](Analysis/Invoke-PurviewAnalysis%20-%20Admin%20Instructions.md) for step-by-step guidance.**
+
+- Takes the customer's `Purview-Export-*.json` file
+- Checks DSPM for AI policy deployment, DLP enforcement mode, and audit retention coverage
+- Produces a Markdown report and a JSON findings file
 
 ---
 
-## What does the Conditional Access analysis check for?
+## What do the analysis scripts check for?
+
+### Conditional Access analysis
 
 The analysis script checks every CA policy against seven rules:
 
@@ -72,6 +82,15 @@ The analysis script checks every CA policy against seven rules:
 🔴 Critical = Copilot will be blocked. Fix before enabling Copilot.
 🟡 Warning = Copilot may have problems. Review before enabling Copilot.
 🔵 Info = Worth knowing about, but no immediate action required.
+
+### Purview Data Security analysis
+
+| Rule | What it looks for |
+|---|---|
+| 🟡 P1 — Policy Not Deployed | A DSPM for AI policy that has not been created in the tenant |
+| 🟡 P2 — Policy in Test Mode | A DSPM for AI DLP policy that exists but is not enforcing (test mode only) |
+| 🟡 P3 — Policy Disabled | A DSPM for AI DLP policy that exists but has been explicitly disabled |
+| 🔵 A1 — No Copilot Audit Retention | No custom audit retention policy covering the `CopilotInteraction` record type |
 
 ---
 
@@ -122,7 +141,9 @@ There is also a Microsoft 365 Copilot declarative agent that does the Conditiona
 | `LogCollection/Get-PurviewAudit - Customer Instructions.md` | Step-by-step guide for customers running the Purview export |
 | `Analysis/Invoke-CAAnalysis.ps1` | Analyses a CA export for Copilot-blocking misconfigurations |
 | `Analysis/Admin Instructions.md` | Step-by-step guide for analysts running the CA analysis |
-| `Analysis/tests/` | Automated Pester tests for the CA analysis script |
+| `Analysis/Invoke-PurviewAnalysis.ps1` | Analyses a Purview export for DSPM for AI policy gaps |
+| `Analysis/Invoke-PurviewAnalysis - Admin Instructions.md` | Step-by-step guide for analysts running the Purview analysis |
+| `Analysis/tests/` | Automated Pester tests for both analysis scripts |
 | `copilot-agent/manifest.json` | Copilot Studio agent manifest |
 | `copilot-agent/instruction.txt` | Agent system prompt with all 7 CA rules |
 
@@ -143,4 +164,9 @@ There is also a Microsoft 365 Copilot declarative agent that does the Conditiona
 **Analyst — analyse the CA export:**
 ```powershell
 .\Analysis\Invoke-CAAnalysis.ps1 -InputPath ".\CA-Export-{filename}.json"
+```
+
+**Analyst — analyse the Purview export:**
+```powershell
+.\Analysis\Invoke-PurviewAnalysis.ps1 -InputPath ".\Purview-Export-{filename}.json"
 ```
