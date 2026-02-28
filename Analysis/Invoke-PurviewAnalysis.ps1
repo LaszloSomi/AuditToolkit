@@ -163,7 +163,6 @@ function Test-CopilotInteractionRetention {
 
 function Test-DlpCopilotCoverage {
     # T-11: RTM FR-D1
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [AllowNull()] [AllowEmptyCollection()] $DlpPolicies
     )

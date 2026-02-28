@@ -68,4 +68,10 @@ Describe 'Test-DlpCopilotCoverage' {
         $result.Count | Should -Be 1
         $result[0].ruleId | Should -Be 'D1'
     }
+
+    It 'Returns one D1 Warning when dlpPolicies is an empty array' {
+        $result = @(Test-DlpCopilotCoverage -DlpPolicies @())
+        $result.Count | Should -Be 1
+        $result[0].ruleId | Should -Be 'D1'
+    }
 }
