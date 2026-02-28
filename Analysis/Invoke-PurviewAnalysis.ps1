@@ -163,7 +163,101 @@ function Test-CopilotInteractionRetention {
 #endregion Rules
 
 #region Report
-# (placeholder — implemented in Task 6)
+
+function Write-PurviewAnalysisReport {
+    param(
+        [Parameter(Mandatory)] $Export,
+        [Parameter(Mandatory)] $Findings,
+        [Parameter(Mandatory)] [string]$OutputPath
+    )
+
+    $timestamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
+    $baseName  = "Purview-Analysis-$($Export.tenantId)-$($Export.environment)-$timestamp"
+    $mdPath    = Join-Path $OutputPath "$baseName.md"
+    $jsonPath  = Join-Path $OutputPath "$baseName.json"
+
+    $warningCount = @($Findings | Where-Object severity -eq 'Warning').Count
+    $infoCount    = @($Findings | Where-Object severity -eq 'Info').Count
+
+    # ── Markdown ──────────────────────────────────────────────────────────────
+    $sb = [System.Text.StringBuilder]::new()
+    [void]$sb.AppendLine('# Purview Analysis — DSPM for AI Readiness')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine("**Tenant:** $($Export.tenantId)  |  **Environment:** $($Export.environment)")
+    [void]$sb.AppendLine("**Exported by:** $($Export.exportedBy)  |  **Analysed:** $(Get-Date -Format 'o')")
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Summary')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('| Severity | Count |')
+    [void]$sb.AppendLine('|---|---|')
+    [void]$sb.AppendLine("| 🟡 Warning | $warningCount |")
+    [void]$sb.AppendLine("| 🔵 Info | $infoCount |")
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Findings')
+    [void]$sb.AppendLine('')
+
+    if (@($Findings).Count -eq 0) {
+        [void]$sb.AppendLine('_No issues found._')
+    } else {
+        $orderedFindings = @(
+            @($Findings | Where-Object severity -eq 'Warning')
+            @($Findings | Where-Object severity -eq 'Info')
+        )
+        foreach ($f in $orderedFindings) {
+            $icon = switch ($f.severity) { 'Warning' { '🟡' } default { '🔵' } }
+            [void]$sb.AppendLine("### $icon $($f.ruleId) — $($f.summary)")
+            [void]$sb.AppendLine('')
+            [void]$sb.AppendLine("**Policy:** $($f.policyName)  |  **Type:** $($f.policyType ?? 'N/A')  |  **Severity:** $($f.severity)")
+            [void]$sb.AppendLine('')
+            [void]$sb.AppendLine($f.detail)
+            [void]$sb.AppendLine('')
+            [void]$sb.AppendLine("**Recommendation:** $($f.recommendation)")
+            [void]$sb.AppendLine('')
+        }
+    }
+
+    [void]$sb.AppendLine('## DSPM for AI Policy Inventory')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('| Policy | Type | Detected | Mode |')
+    [void]$sb.AppendLine('|---|---|---|---|')
+    foreach ($entry in $Export.dspmPolicyInventory) {
+        $detected = if ($entry.detected) { 'Yes' } else { 'No' }
+        $mode     = if ($null -ne $entry.mode) { $entry.mode } else { '-' }
+        [void]$sb.AppendLine("| $($entry.policyName) | $($entry.policyType) | $detected | $mode |")
+    }
+    [void]$sb.AppendLine('')
+
+    [void]$sb.AppendLine('## Collection Limitations')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('The following settings could not be collected via PowerShell and must be verified manually in the portal:')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('| Setting | Reason | Portal Path |')
+    [void]$sb.AppendLine('|---|---|---|')
+    foreach ($lim in $Export.collectionLimitations) {
+        [void]$sb.AppendLine("| $($lim.setting) | $($lim.reason) | $($lim.portalPath) |")
+    }
+
+    Set-Content -Path $mdPath -Value $sb.ToString() -Encoding UTF8
+    Write-Host "Markdown report written: $mdPath" -ForegroundColor Green
+
+    # ── JSON ──────────────────────────────────────────────────────────────────
+    $envelope = [ordered]@{
+        analysedBy   = 'Invoke-PurviewAnalysis.ps1'
+        analysedAt   = (Get-Date -Format 'o')
+        tenantId     = $Export.tenantId
+        environment  = $Export.environment
+        findingCount = @($Findings).Count
+        findings     = $Findings
+    }
+    $envelope | ConvertTo-Json -Depth 20 | Set-Content -Path $jsonPath -Encoding UTF8
+    Write-Host "JSON findings written: $jsonPath" -ForegroundColor Green
+
+    return [PSCustomObject]@{
+        MarkdownPath = $mdPath
+        JsonPath     = $jsonPath
+    }
+}
+
 #endregion Report
 
 #region Main
