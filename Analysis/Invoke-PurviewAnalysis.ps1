@@ -65,7 +65,30 @@ function Import-PurviewExport {
 #endregion Helpers
 
 #region Rules
-# (placeholder — implemented in Tasks 2-5)
+
+function Test-DspmPolicyNotDeployed {
+    param(
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $DspmInventory
+    )
+
+    $findings = @()
+    foreach ($entry in $DspmInventory) {
+        if ($entry.detected) { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'P1'
+            severity       = 'Warning'
+            policyName     = $entry.policyName
+            policyType     = $entry.policyType
+            summary        = "DSPM for AI policy '$($entry.policyName)' ($($entry.policyType)) is not deployed in this tenant."
+            detail         = "This policy is part of the DSPM for AI default policy set and has not been created in this tenant. Without it, the corresponding AI governance control is absent."
+            recommendation = "In the Microsoft Purview portal, navigate to DSPM for AI > Policies and activate this policy."
+        }
+    }
+    return $findings
+}
+
+# (placeholder — Rules P2, P3, A1 added in Tasks 3-5)
 #endregion Rules
 
 #region Report
