@@ -1,8 +1,8 @@
 # How to Analyse a Purview Data Security Export
 
-This guide walks you through running `Invoke-PurviewAnalysis.ps1` — a script that reads a Purview export file and checks it for gaps in DSPM for AI policy deployment, DLP enforcement, and audit log retention.
+This guide walks you through running `Invoke-PurviewAnalysis.ps1` — a script that reads a Purview export file and checks it for gaps in DSPM for AI policy deployment, DLP enforcement, audit log retention, and Insider Risk Management configuration.
 
-> **What the script does in plain English:** It reads the JSON file the customer sent you, checks the DSPM for AI policy inventory and audit settings against four rules, and produces a Markdown report and a JSON findings file on your machine. It makes no network calls and does not touch the customer's tenant.
+> **What the script does in plain English:** It reads the JSON file the customer sent you, checks the DSPM for AI policy inventory, audit settings, DLP workload coverage, and IRM configuration against six rules, and produces a Markdown report and a JSON findings file on your machine. It makes no network calls and does not touch the customer's tenant.
 
 ---
 
@@ -120,7 +120,7 @@ Machine-readable output for import into ticketing systems, dashboards, or furthe
 
 ## Understanding the Findings
 
-The script checks the export against four rules across two categories.
+The script checks the export against six rules across four categories.
 
 ### DSPM for AI Policy Rules
 
@@ -137,6 +137,22 @@ These rules check whether the DSPM for AI out-of-the-box policies have been depl
 | Rule | Severity | What it detects |
 |---|---|---|
 | A1 | 🔵 Info | No custom audit retention policy covering the `CopilotInteraction` record type |
+
+### DLP Workload Rules
+
+| Rule | Severity | What it detects |
+|---|---|---|
+| D1 | 🟡 Warning | No enforced DLP policy scoped to the `CopilotInteractions` or `M365Copilot` workload |
+
+D1 fires when the tenant has no DLP policy that simultaneously targets a Copilot workload, is in `Enable` mode, and is enabled. Policies in test mode or disabled do not satisfy this check. Without such a policy, data submitted to Copilot is not evaluated against any DLP rules.
+
+### Insider Risk Management Rules
+
+| Rule | Severity | What it detects |
+|---|---|---|
+| I1 | 🔵 Info | No active IRM policy using an AI-relevant template |
+
+I1 fires when no IRM policy with status `Active` uses one of the following templates: `RiskyAIUsage`, `DataLeak`, `DataLeakByPriorityUser`, or `DataTheftByDepartingEmployee`. These templates generate risk signals that DSPM for AI surfaces as AI-related insider risk. Without an active policy of this type, AI-related risk events are not scored or surfaced.
 
 ### Severity guide
 
@@ -255,7 +271,7 @@ New-Item -Path "C:\Reports" -ItemType Directory
 
 ### The report shows no findings
 
-This can mean the tenant has all DSPM for AI policies deployed and enforced, and has a `CopilotInteraction` retention policy in place — which is a good outcome. Confirm by reviewing the DSPM policy inventory table in the report. If all eight policies show `Detected: Yes` and DLP policies show `Mode: Enable`, the tenant is well-configured.
+This can mean the tenant is well-configured across all six checks: all DSPM for AI policies deployed and enforced, a `CopilotInteraction` retention policy in place, an enforced DLP policy covering the Copilot workload, and an active IRM policy using an AI-relevant template. Confirm by reviewing the DSPM policy inventory table in the report.
 
 ---
 
