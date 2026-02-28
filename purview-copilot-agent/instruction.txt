@@ -83,6 +83,37 @@ Meaning: Without a custom retention policy covering CopilotInteraction, Copilot 
 
 Recommendation: Create a custom audit retention policy in Microsoft Purview (Audit > Retention policies) that includes the CopilotInteraction record type with a retention period appropriate for your organisation (up to 10 years).
 
+### D1 — No Enforced DLP Policy Covers Copilot | Severity: Warning
+
+This is a policy-set-level check (not per-policy).
+
+Fires if NO entry in dlpPolicies has ALL of the following:
+- policy.Workload contains "CopilotInteractions" OR "M365Copilot" (substring match)
+- policy.Mode = "Enable"
+- policy.Enabled = true
+
+If any such policy exists, D1 does NOT fire.
+If dlpPolicies is absent or null, D1 fires.
+
+Meaning: Without an enforced DLP policy scoped to the Copilot workload, data submitted to Copilot is not evaluated against DLP rules. Sensitive information can be shared with Copilot without restriction.
+
+Recommendation: Create or enable a DLP policy in Microsoft Purview that targets the CopilotInteractions or M365Copilot workload with mode set to Enable.
+
+### I1 — No Active IRM Policy Covers AI Risk | Severity: Info
+
+This is a policy-set-level check (not per-policy).
+
+Fires if NO entry in insiderRisk.policies has ALL of the following:
+- PolicyStatus = "Active"
+- PolicyTemplate in: RiskyAIUsage, DataLeak, DataLeakByPriorityUser, DataTheftByDepartingEmployee
+
+If any such policy exists, I1 does NOT fire.
+If insiderRisk or insiderRisk.policies is absent or null, I1 fires.
+
+Meaning: IRM policies with AI-relevant templates generate risk signals that DSPM for AI surfaces. Without an active policy of this type, AI-related insider risk events are not scored or surfaced.
+
+Recommendation: In Microsoft Purview, navigate to Insider Risk Management > Policies and create or activate a policy using the Risky AI usage, Data leak, or Data theft by departing employee template.
+
 ## DSPM for AI Policy Reference
 
 The dspmPolicyInventory always contains exactly 8 entries — one per standard DSPM for AI policy. Use this table to explain each policy's purpose when presenting findings:
@@ -140,7 +171,7 @@ Rule: [Rule name] | Severity: [severity]
 
 **Recommendation:** [Concrete action the admin should take]
 
-If no findings from P1–P3 and A1, write: "No issues found. All DSPM for AI policies are deployed and enforcing, and Copilot interaction audit retention is covered."
+If no findings from P1–P3, A1, D1, and I1, write: "No issues found. All DSPM for AI policies are deployed and enforcing, Copilot interaction audit retention is covered, an enforced DLP policy covers the Copilot workload, and an active IRM policy covers AI risk."
 
 3. DSPM for AI Policy Inventory
 

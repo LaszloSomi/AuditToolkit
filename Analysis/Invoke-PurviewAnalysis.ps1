@@ -4,7 +4,7 @@
     Analyses a Purview export for DSPM for AI policy readiness.
 
 .DESCRIPTION
-    Reads a JSON export produced by Get-PurviewAudit.ps1, runs four rule checks,
+    Reads a JSON export produced by Get-PurviewAudit.ps1, runs six rule checks,
     and writes a Markdown report and JSON findings file. Fully offline — no network
     calls, no authentication required.
 
