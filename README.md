@@ -1,47 +1,63 @@
 # AuditToolkit
 
-This toolkit checks your Microsoft 365 Conditional Access policies to make sure they won't block Microsoft 365 Copilot.
+This toolkit audits your Microsoft 365 tenant for configurations that affect the security and availability of Microsoft 365 Copilot. It covers two areas:
 
-It has two parts that work together:
+1. **Conditional Access** — checks that your CA policies won't block Copilot access
+2. **Purview Data Security** — checks that DLP, Insider Risk Management, and audit settings protect your data in AI experiences
 
-1. **The customer runs a script** that reads their Conditional Access policies and saves them to a file.
-2. **The analyst runs a second script** on that file to check for problems and produce a report.
+Each area follows the same two-step workflow: a customer runs a collection script that exports settings to a file, then an analyst reviews that file to identify gaps.
 
-Nothing in your tenant is ever changed. Both scripts are read-only.
+Nothing in your tenant is ever changed. All scripts are read-only.
 
 ---
 
 ## I am a customer — what do I need to do?
 
-You need to run one script that exports your Conditional Access policies to a file and send that file to your Microsoft contact.
+You need to run one or both collection scripts and send the output files to your Microsoft contact.
 
-👉 **Read [Customer Instructions.md](LogCollection/Customer%20Instructions.md) for step-by-step guidance.**
+### Conditional Access export
+
+Exports all Conditional Access policies so they can be checked for configurations that block or degrade Copilot.
+
+👉 **Read [Get-CAAudit - Customer Instructions.md](LogCollection/Get-CAAudit%20-%20Customer%20Instructions.md) for step-by-step guidance.**
 
 **In short:**
-- You need PowerShell 7 and two Microsoft Graph modules installed (the guide walks you through this)
+- You need PowerShell 7 and two Microsoft Graph modules (the guide walks you through this)
 - You run one command and sign in with your admin account
-- The script saves a `.json` file to your machine
-- You send that file to your Microsoft contact — that is all you need to do
+- The script saves a `CA-Export-*.json` file to your machine
+- Send that file to your Microsoft contact
+
+### Purview Data Security export
+
+Exports your DLP policies, Insider Risk Management settings, and audit retention policies so they can be checked for gaps in AI data protection.
+
+👉 **Read [Get-PurviewAudit - Customer Instructions.md](LogCollection/Get-PurviewAudit%20-%20Customer%20Instructions.md) for step-by-step guidance.**
+
+**In short:**
+- You need PowerShell 7 and one module (`ExchangeOnlineManagement`) — the guide walks you through this
+- You run one command and sign in with your compliance admin account
+- The script saves a `Purview-Export-*.json` file to your machine
+- Send that file to your Microsoft contact
 
 ---
 
 ## I am an analyst — what do I need to do?
 
-Once you have the export file from the customer, you run the analysis script on it. It checks the policies against seven rules and produces a Markdown report and a JSON findings file.
+Once you have the export file(s) from the customer, use the analysis script or the Copilot agent to review them.
 
-👉 **Read [Admin Instructions.md](Analysis/Admin%20Instructions.md) for step-by-step guidance.**
+👉 **Read [Admin Instructions.md](Analysis/Admin%20Instructions.md) for step-by-step guidance on the Conditional Access analysis script.**
 
 **In short:**
-- You need PowerShell 7 — no Microsoft Graph modules required, no internet connection needed
-- You run one command pointing at the customer's export file
-- The script produces two files: a readable report (`.md`) and a machine-readable findings file (`.json`)
-- No changes are made to anything — it reads the file and writes a report, that is it
+- You need PowerShell 7 — no modules required, no internet connection needed
+- You run one command pointing at the customer's CA export file
+- The script produces a Markdown report and a JSON findings file
+- No changes are made to anything
 
 ---
 
-## What does the analysis check for?
+## What does the Conditional Access analysis check for?
 
-The analysis script checks every policy against seven rules:
+The analysis script checks every CA policy against seven rules:
 
 | Rule | What it looks for |
 |---|---|
@@ -59,9 +75,9 @@ The analysis script checks every policy against seven rules:
 
 ---
 
-## I want to use the Copilot chat agent instead of the script
+## I want to use the Copilot chat agent instead of the analysis script
 
-There is also a Microsoft 365 Copilot declarative agent that does the same analysis inside Copilot chat. Instead of running a PowerShell script, you paste the export JSON directly into a Copilot conversation and the agent checks it for you.
+There is also a Microsoft 365 Copilot declarative agent that does the Conditional Access analysis inside Copilot chat. Instead of running a PowerShell script, you paste the export JSON directly into a Copilot conversation and the agent checks it for you.
 
 **Deploy it once, use it from Copilot chat forever.**
 
@@ -90,7 +106,7 @@ There is also a Microsoft 365 Copilot declarative agent that does the same analy
 
 4. **Publish** — once imported, click **Publish** to make it available in Microsoft 365 Copilot.
 
-5. **Use it** — open Microsoft 365 Copilot, find the **CA Policy Analyzer** agent in the agent store or use a direct link, and start a conversation. When asked, paste the contents of the customer's export `.json` file into the chat. The agent will analyse it and return its findings.
+5. **Use it** — open Microsoft 365 Copilot, find the **CA Policy Analyzer** agent, and start a conversation. Paste the contents of the customer's `CA-Export-*.json` file into the chat and the agent will analyse it.
 
 > The agent uses the same seven rules as `Invoke-CAAnalysis.ps1`. The two tools are independent — you do not need one to use the other.
 
@@ -100,24 +116,31 @@ There is also a Microsoft 365 Copilot declarative agent that does the same analy
 
 | File | What it is |
 |---|---|
-| `LogCollection/Get-CAAudit.ps1` | The script customers run to export their policies |
-| `LogCollection/Customer Instructions.md` | Step-by-step guide for customers running the export |
-| `Analysis/Invoke-CAAnalysis.ps1` | The script analysts run to check the export for problems |
-| `Analysis/Admin Instructions.md` | Step-by-step guide for analysts running the analysis |
+| `LogCollection/Get-CAAudit.ps1` | Exports Conditional Access policies from the tenant |
+| `LogCollection/Get-CAAudit - Customer Instructions.md` | Step-by-step guide for customers running the CA export |
+| `LogCollection/Get-PurviewAudit.ps1` | Exports Purview DLP, IRM, and audit settings from the tenant |
+| `LogCollection/Get-PurviewAudit - Customer Instructions.md` | Step-by-step guide for customers running the Purview export |
+| `Analysis/Invoke-CAAnalysis.ps1` | Analyses a CA export for Copilot-blocking misconfigurations |
+| `Analysis/Admin Instructions.md` | Step-by-step guide for analysts running the CA analysis |
+| `Analysis/tests/` | Automated Pester tests for the CA analysis script |
 | `copilot-agent/manifest.json` | Copilot Studio agent manifest |
-| `copilot-agent/instruction.txt` | Agent system prompt with all 7 rules |
-| `tests/` | Automated tests for the analysis script |
+| `copilot-agent/instruction.txt` | Agent system prompt with all 7 CA rules |
 
 ---
 
-## Quick start — two commands
+## Quick start
 
-**Customer (export):**
+**Customer — export Conditional Access policies:**
 ```powershell
 .\LogCollection\Get-CAAudit.ps1 -UserPrincipalName admin@yourdomain.com
 ```
 
-**Analyst (analyse):**
+**Customer — export Purview data security settings:**
+```powershell
+.\LogCollection\Get-PurviewAudit.ps1 -UserPrincipalName admin@yourdomain.com
+```
+
+**Analyst — analyse the CA export:**
 ```powershell
 .\Analysis\Invoke-CAAnalysis.ps1 -InputPath ".\CA-Export-{filename}.json"
 ```
