@@ -160,6 +160,40 @@ function Test-CopilotInteractionRetention {
         recommendation = 'Create a custom audit retention policy in Microsoft Purview that includes the CopilotInteraction record type with a retention period appropriate for your organisation.'
     })
 }
+
+function Test-DlpCopilotCoverage {
+    # T-11: RTM FR-D1
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [AllowNull()] [AllowEmptyCollection()] $DlpPolicies
+    )
+
+    $copilotWorkloads = @('CopilotInteractions', 'M365Copilot')
+
+    $covered = $null
+    if ($null -ne $DlpPolicies) {
+        $covered = @($DlpPolicies) | Where-Object {
+            $p = $_.policy
+            $p.Mode -eq 'Enable' -and
+            $p.Enabled -eq $true -and
+            ($copilotWorkloads | Where-Object { $p.Workload -like "*$_*" })
+        } | Select-Object -First 1
+    }
+
+    if ($null -ne $covered) {
+        return @()
+    }
+
+    return @([PSCustomObject]@{
+        ruleId         = 'D1'
+        severity       = 'Warning'
+        policyName     = '(no policy)'
+        policyType     = 'DLP'
+        summary        = 'No enforced DLP policy covers a Copilot workload (CopilotInteractions or M365Copilot).'
+        detail         = 'Without a DLP policy scoped to the Copilot workload in enforce mode, data submitted to Copilot is not evaluated against DLP rules. Sensitive information can be shared with Copilot without restriction.'
+        recommendation = 'Create or enable a DLP policy in Microsoft Purview that targets the CopilotInteractions or M365Copilot workload and set its mode to Enable.'
+    })
+}
 #endregion Rules
 
 #region Report
