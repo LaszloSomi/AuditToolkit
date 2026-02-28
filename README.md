@@ -109,7 +109,7 @@ Both analysis scripts have a matching Microsoft 365 Copilot declarative agent. I
 
 ### How to deploy either agent
 
-1. **Download the agent files** from the relevant folder in this repo (`copilot-agent/` or `purview-copilot-agent/`).
+1. **Download the agent files** from the relevant subfolder inside `Copilot Agents/` in this repo.
 
 2. **Create a zip file** containing both files directly (not inside a subfolder):
    ```
@@ -131,8 +131,8 @@ Both analysis scripts have a matching Microsoft 365 Copilot declarative agent. I
 
 | Agent | Folder | Analyses | Export file |
 |---|---|---|---|
-| CA Policy Analyzer | `copilot-agent/` | Conditional Access policies (7 rules) | `CA-Export-*.json` |
-| Purview AI Readiness Analyzer | `purview-copilot-agent/` | DSPM for AI policies, DLP enforcement, audit retention, IRM (6 rules) | `Purview-Export-*.json` |
+| CA Policy Analyzer | `Copilot Agents/CA Policy Analyzer/` | Conditional Access policies (7 rules) | `CA-Export-*.json` |
+| Purview AI Readiness Analyzer | `Copilot Agents/Purview AI Readiness Analyzer/` | DSPM for AI policies, DLP enforcement, audit retention, IRM (6 rules) | `Purview-Export-*.json` |
 
 ---
 
@@ -149,10 +149,10 @@ Both analysis scripts have a matching Microsoft 365 Copilot declarative agent. I
 | `Analysis/Invoke-PurviewAnalysis.ps1` | Analyses a Purview export for DSPM for AI policy gaps |
 | `Analysis/Invoke-PurviewAnalysis - Admin Instructions.md` | Step-by-step guide for analysts running the Purview analysis |
 | `Analysis/tests/` | Automated Pester tests for both analysis scripts |
-| `copilot-agent/manifest.json` | CA Policy Analyzer — Copilot Studio agent manifest |
-| `copilot-agent/instruction.txt` | CA Policy Analyzer — agent system prompt (7 CA rules) |
-| `purview-copilot-agent/manifest.json` | Purview AI Readiness Analyzer — Copilot Studio agent manifest |
-| `purview-copilot-agent/instruction.txt` | Purview AI Readiness Analyzer — agent system prompt (6 Purview rules) |
+| `Copilot Agents/CA Policy Analyzer/manifest.json` | CA Policy Analyzer — Copilot Studio agent manifest |
+| `Copilot Agents/CA Policy Analyzer/instruction.txt` | CA Policy Analyzer — agent system prompt (7 CA rules) |
+| `Copilot Agents/Purview AI Readiness Analyzer/manifest.json` | Purview AI Readiness Analyzer — Copilot Studio agent manifest |
+| `Copilot Agents/Purview AI Readiness Analyzer/instruction.txt` | Purview AI Readiness Analyzer — agent system prompt (6 Purview rules) |
 
 ---
 
