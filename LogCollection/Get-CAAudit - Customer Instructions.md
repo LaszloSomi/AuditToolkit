@@ -4,6 +4,18 @@ This guide walks you through running `Get-CAAudit.ps1` — a script that exports
 
 > **What the script does in plain English:** It signs into your tenant using your admin account, reads every Conditional Access policy, and saves the results to a file on your machine. Nothing is changed in your tenant. It is read-only.
 
+## Requirements at a glance
+
+| Requirement | Detail |
+|---|---|
+| **Authentication** | Microsoft Graph — interactive browser sign-in or device code |
+| **Minimum role** | Security Reader (Global Administrator not required) |
+| **Accepted roles** | Conditional Access Administrator, Security Reader, Security Administrator, Global Reader, Global Administrator |
+| **Graph permissions** | `Policy.Read.All` (required) · `Directory.Read.All` (recommended — resolves GUIDs to display names) |
+| **PowerShell modules** | `Microsoft.Graph.Authentication` · `Microsoft.Graph.Identity.SignIns` |
+| **PowerShell version** | 7.2 or later |
+| **Network access** | Outbound HTTPS to `graph.microsoft.com` (or sovereign equivalent) |
+
 ---
 
 ## Before You Start

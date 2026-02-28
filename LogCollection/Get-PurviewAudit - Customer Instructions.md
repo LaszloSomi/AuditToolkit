@@ -4,6 +4,17 @@ This guide walks you through running `Get-PurviewAudit.ps1` — a script that ex
 
 > **What the script does in plain English:** It signs into your tenant's Compliance Center using your admin account, reads your Data Loss Prevention policies, Insider Risk Management settings, and audit log retention policies, then saves the results to a file on your machine. Nothing is changed in your tenant. It is read-only.
 
+## Requirements at a glance
+
+| Requirement | Detail |
+|---|---|
+| **Authentication** | Security & Compliance PowerShell (`Connect-IPPSSession`) — interactive browser or device code |
+| **Minimum role** | Compliance Reader (built-in Purview role group) |
+| **Individual roles** | `View-Only DLP Compliance Management` · `View-Only Insider Risk Management` · `View-Only Audit Logs` |
+| **PowerShell module** | `ExchangeOnlineManagement` 3.x or later |
+| **PowerShell version** | 7.2 or later |
+| **Network access** | Outbound HTTPS to the Security & Compliance PowerShell endpoint for your environment |
+
 ---
 
 ## Before You Start

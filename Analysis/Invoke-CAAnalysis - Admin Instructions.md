@@ -4,6 +4,16 @@ This guide walks you through running `Invoke-CAAnalysis.ps1` — a script that r
 
 > **What the script does in plain English:** It reads the JSON file the customer sent you, checks every policy against seven rules, and produces a Markdown report and a JSON findings file on your machine. It makes no network calls and does not touch the customer's tenant.
 
+## Requirements at a glance
+
+| Requirement | Detail |
+|---|---|
+| **Authentication** | None — fully offline |
+| **Roles required** | None |
+| **PowerShell modules** | None |
+| **PowerShell version** | 7.2 or later |
+| **Network access** | None |
+
 ---
 
 ## Before You Start
