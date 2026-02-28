@@ -136,7 +136,30 @@ function Test-DspmPolicyDisabled {
     return $findings
 }
 
-# (placeholder — Rule A1 added in Task 5)
+function Test-CopilotInteractionRetention {
+    param(
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $RetentionPolicies
+    )
+
+    $covered = $RetentionPolicies | Where-Object {
+        # Normalise: RecordTypes may be a string (single type) or array.
+        'CopilotInteraction' -in @($_.RecordTypes)
+    }
+
+    if ($null -ne $covered -and @($covered).Count -gt 0) {
+        return @()
+    }
+
+    return @([PSCustomObject]@{
+        ruleId         = 'A1'
+        severity       = 'Info'
+        policyName     = '(no policy)'
+        policyType     = $null
+        summary        = 'No audit log retention policy covers the CopilotInteraction record type.'
+        detail         = 'DSPM for AI surfaces AI risk signals from the audit log. Without a custom retention policy covering CopilotInteraction, these records are kept for only 90 days (the Microsoft default). Extended retention is recommended for governance and investigation workflows.'
+        recommendation = 'Create a custom audit retention policy in Microsoft Purview that includes the CopilotInteraction record type with a retention period appropriate for your organisation.'
+    })
+}
 #endregion Rules
 
 #region Report

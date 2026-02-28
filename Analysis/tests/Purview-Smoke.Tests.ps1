@@ -20,6 +20,10 @@ Describe 'Invoke-PurviewAnalysis.ps1 scaffold' {
     It 'Loads Test-DspmPolicyDisabled as a function' {
         Get-Command Test-DspmPolicyDisabled -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
     }
+
+    It 'Loads Test-CopilotInteractionRetention as a function' {
+        Get-Command Test-CopilotInteractionRetention -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+    }
 }
 
 Describe 'Import-PurviewExport' {
