@@ -337,6 +337,8 @@ if ($MyInvocation.InvocationName -ne '.') {
     $findings += @(Test-DspmPolicyTestMode          -DspmInventory     $export.dspmPolicyInventory)
     $findings += @(Test-DspmPolicyDisabled          -DspmInventory     $export.dspmPolicyInventory)
     $findings += @(Test-CopilotInteractionRetention -RetentionPolicies $export.auditRetentionPolicies)
+    $findings += @(Test-DlpCopilotCoverage          -DlpPolicies       $export.dlpPolicies)
+    $findings += @(Test-IrmAiPolicyActive           -InsiderRisk       $export.insiderRisk)
 
     $severitySummary = ($findings | Group-Object severity | ForEach-Object { "$($_.Count) $($_.Name)" }) -join ', '
     Write-Host "Found $($findings.Count) issue(s)$(if ($findings.Count -gt 0) { ": $severitySummary" })." `
