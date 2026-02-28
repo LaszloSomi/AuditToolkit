@@ -112,7 +112,31 @@ function Test-DspmPolicyTestMode {
     return $findings
 }
 
-# (placeholder — Rules P3, A1 added in Tasks 4-5)
+function Test-DspmPolicyDisabled {
+    param(
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $DspmInventory
+    )
+
+    $findings = @()
+    foreach ($entry in $DspmInventory) {
+        if ($entry.policyType -ne 'DLP') { continue }
+        if (-not $entry.detected) { continue }
+        if ($entry.enabled -ne $false) { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'P3'
+            severity       = 'Warning'
+            policyName     = $entry.policyName
+            policyType     = $entry.policyType
+            summary        = "DSPM for AI DLP policy '$($entry.policyName)' is deployed but disabled — it is not enforcing."
+            detail         = "The policy exists in this tenant but has been explicitly disabled. It is not evaluating any traffic and provides no data protection."
+            recommendation = "Re-enable the policy in the Microsoft Purview portal under DSPM for AI > Policies."
+        }
+    }
+    return $findings
+}
+
+# (placeholder — Rule A1 added in Task 5)
 #endregion Rules
 
 #region Report
