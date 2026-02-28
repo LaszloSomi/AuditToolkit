@@ -151,6 +151,39 @@ function Get-DlpPolicies {
     Write-Host "DLP collection complete." -ForegroundColor Green
     return @($result)
 }
+
+function Get-IrmData {
+    Write-Host 'Collecting Insider Risk Management settings and policies...' -ForegroundColor Cyan
+
+    $settings = $null
+    try {
+        $settings = Get-InsiderRiskSettings
+    } catch {
+        Write-Warning "Could not retrieve IRM settings (role may be missing): $_"
+    }
+
+    $policies = @()
+    try {
+        $policies = @(Get-InsiderRiskPolicy)
+        Write-Host "Retrieved $($policies.Count) IRM policy(s)." -ForegroundColor Green
+    } catch {
+        Write-Warning "Could not retrieve IRM policies: $_"
+    }
+
+    $commCompliancePolicies = @()
+    try {
+        $commCompliancePolicies = @(Get-SupervisoryReviewPolicyV2 -ErrorAction SilentlyContinue)
+        Write-Host "Retrieved $($commCompliancePolicies.Count) Communication Compliance policy(s)." -ForegroundColor Green
+    } catch {
+        Write-Warning "Could not retrieve Communication Compliance policies: $_"
+    }
+
+    return [PSCustomObject]@{
+        settings                = $settings
+        policies                = $policies
+        communicationCompliance = $commCompliancePolicies
+    }
+}
 #endregion
 
 #region DSPM inventory
