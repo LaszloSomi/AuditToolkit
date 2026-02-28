@@ -255,7 +255,71 @@ function Get-DspmPolicyInventory {
 #endregion
 
 #region Output
-# (placeholder — implemented in Task 7)
+function Write-PurviewExport {
+    param(
+        [Parameter(Mandatory)] $Connection,
+        [Parameter(Mandatory)] [string]$Environment,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $RetentionPolicies,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $DlpData,
+        [Parameter(Mandatory)] $IrmData,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $DspmInventory,
+        [Parameter(Mandatory)] [string]$OutputPath
+    )
+
+    $timestamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
+    $fileName  = "Purview-Export-$($Connection.TenantID)-$Environment-$timestamp.json"
+    $filePath  = Join-Path $OutputPath $fileName
+
+    $envelope = [ordered]@{
+        exportedBy             = $Connection.UserPrincipalName
+        exportedAt             = (Get-Date -Format 'o')
+        environment            = $Environment
+        tenantId               = $Connection.TenantID
+        auditRetentionPolicies = @($RetentionPolicies)
+        dlpPolicies            = @($DlpData)
+        insiderRisk            = $IrmData
+        dspmPolicyInventory    = @($DspmInventory)
+        collectionLimitations  = @(
+            @{
+                setting    = 'DSPM for AI collection policy status'
+                reason     = 'No PowerShell cmdlet exposes collection policy configuration.'
+                portalPath = 'Microsoft Purview portal > DSPM for AI > Policies'
+            }
+            @{
+                setting    = 'Data risk assessment results'
+                reason     = 'Risk assessment output is portal-only; no API or cmdlet.'
+                portalPath = 'Microsoft Purview portal > DSPM for AI > Data risks'
+            }
+            @{
+                setting    = 'Pay-as-you-go billing model enablement'
+                reason     = 'No PowerShell cmdlet exposes DSPM billing configuration.'
+                portalPath = 'Microsoft Purview portal > DSPM for AI > Settings'
+            }
+            @{
+                setting    = 'Device onboarding status'
+                reason     = 'Managed via Microsoft Defender for Endpoint, not Purview cmdlets.'
+                portalPath = 'Microsoft Defender portal'
+            }
+            @{
+                setting    = 'Browser extension deployment status'
+                reason     = 'Managed via Intune or Group Policy.'
+                portalPath = 'Microsoft Intune admin center'
+            }
+            @{
+                setting    = 'Fabric data risk assessment prerequisites'
+                reason     = 'Requires separate Fabric Admin REST API connection.'
+                portalPath = 'GET https://api.fabric.microsoft.com/v1/admin/tenantsettings'
+            }
+        )
+    }
+
+    $envelope | ConvertTo-Json -Depth 20 | Set-Content -Path $filePath -Encoding UTF8
+    Write-Host "JSON export written: $filePath" -ForegroundColor Green
+
+    return [PSCustomObject]@{
+        JsonPath = $filePath
+    }
+}
 #endregion
 
 #region Main
