@@ -16,6 +16,9 @@ Describe 'Get-PurviewAudit.ps1 scaffold' {
     It 'Loads Get-AuditRetentionPolicies as a function' {
         Get-Command Get-AuditRetentionPolicies -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
     }
+    It 'Loads Get-DlpPolicies as a function' {
+        Get-Command Get-DlpPolicies -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+    }
 }
 
 Describe 'Resolve-IppsEndpoint' {

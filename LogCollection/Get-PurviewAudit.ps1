@@ -133,6 +133,24 @@ function Get-AuditRetentionPolicies {
     Write-Host "Retrieved $($policies.Count) retention policy(s)." -ForegroundColor Green
     return $policies
 }
+
+function Get-DlpPolicies {
+    Write-Host 'Collecting DLP compliance policies...' -ForegroundColor Cyan
+
+    $policies = @(Get-DlpCompliancePolicy -IncludeExtendedProperties $true)
+    Write-Host "Retrieved $($policies.Count) DLP policy(s). Collecting rules..." -ForegroundColor Cyan
+
+    $result = foreach ($policy in $policies) {
+        $rules = @(Get-DlpComplianceRule -Policy $policy.Name -ResultSize Unlimited -ErrorAction SilentlyContinue)
+        [PSCustomObject]@{
+            policy = $policy
+            rules  = $rules
+        }
+    }
+
+    Write-Host "DLP collection complete." -ForegroundColor Green
+    return @($result)
+}
 #endregion
 
 #region DSPM inventory
