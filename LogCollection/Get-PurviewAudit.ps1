@@ -91,7 +91,37 @@ function Assert-IppsModule {
 #endregion
 
 #region Authentication
-# (placeholder — implemented in Task 2)
+function Connect-ToIPPS {
+    param(
+        [string]$EnvironmentName,
+        [string]$Upn,
+        [string]$Flow
+    )
+
+    $endpoint = Resolve-IppsEndpoint $EnvironmentName
+
+    $connectParams = @{
+        UserPrincipalName = $Upn
+        ConnectionUri     = $endpoint
+    }
+
+    if ($Flow -eq 'DeviceCode') {
+        $connectParams.Remove('UserPrincipalName')
+        $connectParams['Device'] = $true
+    }
+
+    Write-Host "Connecting to Security & Compliance PowerShell ($EnvironmentName)..." -ForegroundColor Cyan
+    Connect-IPPSSession @connectParams
+
+    # Retrieve connection metadata for the export envelope.
+    $conn = Get-ConnectionInformation | Select-Object -First 1
+    if ($null -eq $conn) {
+        throw 'Could not retrieve connection information after Connect-IPPSSession.'
+    }
+
+    Write-Host "Connected as: $($conn.UserPrincipalName)  |  Tenant: $($conn.TenantID)" -ForegroundColor Green
+    return $conn
+}
 #endregion
 
 #region Data collection
