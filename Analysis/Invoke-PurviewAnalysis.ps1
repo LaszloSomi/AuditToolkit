@@ -262,6 +262,28 @@ function Write-PurviewAnalysisReport {
 
 #region Main
 if ($MyInvocation.InvocationName -ne '.') {
-    throw 'Script is not yet complete. See implementation plan.'
+    if (-not (Test-Path -Path $OutputPath -PathType Container)) {
+        throw "OutputPath '$OutputPath' does not exist or is not a directory."
+    }
+
+    $export = Import-PurviewExport -Path $InputPath
+    Write-Host "Analysing Purview export for tenant $($export.tenantId) ($($export.environment))..." -ForegroundColor Cyan
+
+    $findings = @()
+    $findings += @(Test-DspmPolicyNotDeployed       -DspmInventory     $export.dspmPolicyInventory)
+    $findings += @(Test-DspmPolicyTestMode          -DspmInventory     $export.dspmPolicyInventory)
+    $findings += @(Test-DspmPolicyDisabled          -DspmInventory     $export.dspmPolicyInventory)
+    $findings += @(Test-CopilotInteractionRetention -RetentionPolicies $export.auditRetentionPolicies)
+
+    $severitySummary = ($findings | Group-Object severity | ForEach-Object { "$($_.Count) $($_.Name)" }) -join ', '
+    Write-Host "Found $($findings.Count) issue(s)$(if ($findings.Count -gt 0) { ": $severitySummary" })." `
+        -ForegroundColor $(if ($findings.Count -eq 0) { 'Green' } else { 'Yellow' })
+
+    $result = Write-PurviewAnalysisReport -Export $export -Findings $findings -OutputPath $OutputPath
+
+    Write-Host ''
+    Write-Host 'Analysis complete.' -ForegroundColor Cyan
+    Write-Host "  Markdown: $($result.MarkdownPath)"
+    Write-Host "  JSON:     $($result.JsonPath)"
 }
 #endregion Main
