@@ -88,7 +88,31 @@ function Test-DspmPolicyNotDeployed {
     return $findings
 }
 
-# (placeholder — Rules P2, P3, A1 added in Tasks 3-5)
+function Test-DspmPolicyTestMode {
+    param(
+        [Parameter(Mandatory)] [AllowEmptyCollection()] $DspmInventory
+    )
+
+    $findings = @()
+    foreach ($entry in $DspmInventory) {
+        if ($entry.policyType -ne 'DLP') { continue }
+        if (-not $entry.detected) { continue }
+        if ($entry.mode -notin @('TestWithNotifications', 'TestWithoutNotifications')) { continue }
+
+        $findings += [PSCustomObject]@{
+            ruleId         = 'P2'
+            severity       = 'Warning'
+            policyName     = $entry.policyName
+            policyType     = $entry.policyType
+            summary        = "DSPM for AI DLP policy '$($entry.policyName)' is deployed but in test mode ($($entry.mode)) — it is not enforcing."
+            detail         = "Test mode policies log matches and optionally send notifications but do not enforce the policy action. Data submitted to AI apps is not blocked or restricted while this policy is in test mode."
+            recommendation = "Switch the policy mode to 'Enable' in the Microsoft Purview portal to enforce protection."
+        }
+    }
+    return $findings
+}
+
+# (placeholder — Rules P3, A1 added in Tasks 4-5)
 #endregion Rules
 
 #region Report
