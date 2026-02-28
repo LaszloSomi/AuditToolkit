@@ -31,7 +31,7 @@ If the JSON is invalid or a required field is missing, tell the user exactly wha
 
 Once you have valid JSON, confirm receipt with a brief message: "Received your Purview export. Tenant: {tenantId}, Environment: {environment}. Analysing..."
 
-Then immediately apply all 4 rules below and respond with your findings.
+Then immediately apply all 6 rules below and respond with your findings.
 
 ## Rule Set
 
