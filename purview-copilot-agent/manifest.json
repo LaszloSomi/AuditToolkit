@@ -1,0 +1,13 @@
+{
+  "schema_version": "v2.1",
+  "name_for_human": "Purview AI Readiness Analyzer",
+  "description_for_human": "Analyzes Purview data security exports for gaps in DSPM for AI policy deployment, DLP enforcement, and audit log retention.",
+  "namespace": "PurviewAIAnalyzer",
+  "capabilities": {
+    "conversation_starters": [
+      { "text": "Analyse my Purview export for AI data security readiness" },
+      { "text": "Which DSPM for AI policies are missing or not enforcing?" },
+      { "text": "Is my tenant retaining Copilot interaction audit logs?" }
+    ]
+  }
+}

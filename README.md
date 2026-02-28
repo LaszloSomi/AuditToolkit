@@ -94,40 +94,43 @@ The analysis script checks every CA policy against seven rules:
 
 ---
 
-## I want to use the Copilot chat agent instead of the analysis script
+## I want to use Copilot chat agents instead of the analysis scripts
 
-There is also a Microsoft 365 Copilot declarative agent that does the Conditional Access analysis inside Copilot chat. Instead of running a PowerShell script, you paste the export JSON directly into a Copilot conversation and the agent checks it for you.
+Both analysis scripts have a matching Microsoft 365 Copilot declarative agent. Instead of running PowerShell, you paste the export JSON directly into a Copilot conversation and the agent checks it for you.
 
-**Deploy it once, use it from Copilot chat forever.**
+**Deploy once, use from Copilot chat forever.**
 
 ### What you need
 
 - A Microsoft 365 Copilot licence
 - Access to [Copilot Studio](https://copilotstudio.microsoft.com)
-- The `copilot-agent/` folder from this repo
 
-### How to deploy
+### How to deploy either agent
 
-1. **Download the agent files** — get `copilot-agent/manifest.json` and `copilot-agent/instruction.txt` from this repo onto your machine.
+1. **Download the agent files** from the relevant folder in this repo (`copilot-agent/` or `purview-copilot-agent/`).
 
-2. **Create a zip file** — put both files into a zip. The zip must contain the files directly (not inside a subfolder):
+2. **Create a zip file** containing both files directly (not inside a subfolder):
    ```
-   CA-Policy-Analyzer.zip
+   AgentName.zip
    ├── manifest.json
    └── instruction.txt
    ```
 
 3. **Import into Copilot Studio**
    - Go to [copilotstudio.microsoft.com](https://copilotstudio.microsoft.com)
-   - Click **Agents** in the left menu
-   - Click **Import**
+   - Click **Agents** in the left menu → **Import**
    - Upload your zip file
 
-4. **Publish** — once imported, click **Publish** to make it available in Microsoft 365 Copilot.
+4. **Publish** — click **Publish** to make it available in Microsoft 365 Copilot.
 
-5. **Use it** — open Microsoft 365 Copilot, find the **CA Policy Analyzer** agent, and start a conversation. Paste the contents of the customer's `CA-Export-*.json` file into the chat and the agent will analyse it.
+5. **Use it** — open Microsoft 365 Copilot, find the agent, and paste the relevant export JSON into the chat.
 
-> The agent uses the same seven rules as `Invoke-CAAnalysis.ps1`. The two tools are independent — you do not need one to use the other.
+### Available agents
+
+| Agent | Folder | Analyses | Export file |
+|---|---|---|---|
+| CA Policy Analyzer | `copilot-agent/` | Conditional Access policies (7 rules) | `CA-Export-*.json` |
+| Purview AI Readiness Analyzer | `purview-copilot-agent/` | DSPM for AI policies, DLP enforcement, audit retention (4 rules) | `Purview-Export-*.json` |
 
 ---
 
@@ -144,8 +147,10 @@ There is also a Microsoft 365 Copilot declarative agent that does the Conditiona
 | `Analysis/Invoke-PurviewAnalysis.ps1` | Analyses a Purview export for DSPM for AI policy gaps |
 | `Analysis/Invoke-PurviewAnalysis - Admin Instructions.md` | Step-by-step guide for analysts running the Purview analysis |
 | `Analysis/tests/` | Automated Pester tests for both analysis scripts |
-| `copilot-agent/manifest.json` | Copilot Studio agent manifest |
-| `copilot-agent/instruction.txt` | Agent system prompt with all 7 CA rules |
+| `copilot-agent/manifest.json` | CA Policy Analyzer — Copilot Studio agent manifest |
+| `copilot-agent/instruction.txt` | CA Policy Analyzer — agent system prompt (7 CA rules) |
+| `purview-copilot-agent/manifest.json` | Purview AI Readiness Analyzer — Copilot Studio agent manifest |
+| `purview-copilot-agent/instruction.txt` | Purview AI Readiness Analyzer — agent system prompt (4 Purview rules) |
 
 ---
 
