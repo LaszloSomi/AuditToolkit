@@ -200,12 +200,12 @@ function Test-IrmAiPolicyActive {
         [Parameter(Mandatory)] [AllowNull()] $InsiderRisk
     )
 
-    $aiTemplates = @('RiskyAIUsage', 'DataLeak', 'DataLeakByPriorityUser', 'DataTheftByDepartingEmployee')
+    $aiScenarios = @('UnacceptableUsage', 'RiskyAIUsage', 'GeneralDataleak', 'DataLeakByPriorityUser', 'DataTheftByDepartingEmployee')
 
     $active = $null
     if ($null -ne $InsiderRisk -and $null -ne $InsiderRisk.policies) {
         $active = @($InsiderRisk.policies) | Where-Object {
-            $_.PolicyStatus -eq 'Active' -and $_.PolicyTemplate -in $aiTemplates
+            $_.Enabled -eq $true -and $_.InsiderRiskScenario -in $aiScenarios
         } | Select-Object -First 1
     }
 

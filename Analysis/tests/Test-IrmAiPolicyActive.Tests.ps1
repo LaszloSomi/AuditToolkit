@@ -5,30 +5,40 @@ BeforeAll {
 }
 
 Describe 'Test-IrmAiPolicyActive' {
-    It 'Returns no findings when an active RiskyAIUsage policy exists' {
+    It 'Returns no findings when an enabled RiskyAIUsage policy exists' {
         $insiderRisk = [PSCustomObject]@{
             policies = @(
-                [PSCustomObject]@{ Name = 'AI Risk Policy'; PolicyStatus = 'Active'; PolicyTemplate = 'RiskyAIUsage' }
+                [PSCustomObject]@{ Name = 'AI Risk Policy'; Enabled = $true; InsiderRiskScenario = 'RiskyAIUsage' }
             )
         }
         $result = @(Test-IrmAiPolicyActive -InsiderRisk $insiderRisk)
         $result.Count | Should -Be 0
     }
 
-    It 'Returns no findings when an active DataLeak policy exists' {
+    It 'Returns no findings when an enabled GeneralDataleak policy exists' {
         $insiderRisk = [PSCustomObject]@{
             policies = @(
-                [PSCustomObject]@{ Name = 'Data Leak Policy'; PolicyStatus = 'Active'; PolicyTemplate = 'DataLeak' }
+                [PSCustomObject]@{ Name = 'Data Leak Policy'; Enabled = $true; InsiderRiskScenario = 'GeneralDataleak' }
             )
         }
         $result = @(Test-IrmAiPolicyActive -InsiderRisk $insiderRisk)
         $result.Count | Should -Be 0
     }
 
-    It 'Returns one I1 Info when no AI-relevant IRM policy is active' {
+    It 'Returns no findings when an enabled UnacceptableUsage policy exists' {
         $insiderRisk = [PSCustomObject]@{
             policies = @(
-                [PSCustomObject]@{ Name = 'HR Policy'; PolicyStatus = 'Active'; PolicyTemplate = 'HRDataLeak' }
+                [PSCustomObject]@{ Name = 'DSPM AI Policy'; Enabled = $true; InsiderRiskScenario = 'UnacceptableUsage' }
+            )
+        }
+        $result = @(Test-IrmAiPolicyActive -InsiderRisk $insiderRisk)
+        $result.Count | Should -Be 0
+    }
+
+    It 'Returns one I1 Info when no AI-relevant IRM policy is enabled' {
+        $insiderRisk = [PSCustomObject]@{
+            policies = @(
+                [PSCustomObject]@{ Name = 'HR Policy'; Enabled = $true; InsiderRiskScenario = 'HRDataLeak' }
             )
         }
         $result = @(Test-IrmAiPolicyActive -InsiderRisk $insiderRisk)
@@ -37,10 +47,10 @@ Describe 'Test-IrmAiPolicyActive' {
         $result[0].severity | Should -Be 'Info'
     }
 
-    It 'Returns one I1 Info when an AI-relevant policy exists but is inactive' {
+    It 'Returns one I1 Info when an AI-relevant policy exists but is disabled' {
         $insiderRisk = [PSCustomObject]@{
             policies = @(
-                [PSCustomObject]@{ Name = 'AI Risk Policy'; PolicyStatus = 'Inactive'; PolicyTemplate = 'RiskyAIUsage' }
+                [PSCustomObject]@{ Name = 'AI Risk Policy'; Enabled = $false; InsiderRiskScenario = 'RiskyAIUsage' }
             )
         }
         $result = @(Test-IrmAiPolicyActive -InsiderRisk $insiderRisk)
