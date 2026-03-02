@@ -333,8 +333,8 @@ if ($MyInvocation.InvocationName -ne '.') {
     $conn = Connect-ToIPPS -EnvironmentName $Environment -Upn $UserPrincipalName -Flow $AuthFlow
 
     try {
-        $retentionPolicies = Get-AuditRetentionPolicies
-        $dlpData           = Get-DlpPolicies
+        $retentionPolicies = @(Get-AuditRetentionPolicies)
+        $dlpData           = @(Get-DlpPolicies)
         $irmData           = Get-IrmData
 
         # Build DSPM inventory from already-collected data (no additional network calls).
