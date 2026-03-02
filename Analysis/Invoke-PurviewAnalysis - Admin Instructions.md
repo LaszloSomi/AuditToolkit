@@ -6,13 +6,13 @@ This guide walks you through running `Invoke-PurviewAnalysis.ps1` — a script t
 
 ## Requirements at a glance
 
-| Requirement | Detail |
-|---|---|
-| **Authentication** | None — fully offline |
-| **Roles required** | None |
-| **PowerShell modules** | None |
-| **PowerShell version** | 7.2 or later |
-| **Network access** | None |
+| Requirement            | Detail               |
+|------------------------|----------------------|
+| **Authentication**     | None — fully offline |
+| **Roles required**     | None                 |
+| **PowerShell modules** | None                 |
+| **PowerShell version** | 7.2 or later         |
+| **Network access**     | None                 |
 
 ---
 
@@ -136,40 +136,40 @@ The script checks the export against six rules across four categories.
 
 These rules check whether the DSPM for AI out-of-the-box policies have been deployed and are actually enforcing.
 
-| Rule | Severity | What it detects |
-|---|---|---|
-| P1 | 🟡 Warning | A DSPM for AI policy that has not been deployed in this tenant at all |
-| P2 | 🟡 Warning | A DSPM for AI DLP policy that is deployed but in test mode — it logs but does not enforce |
-| P3 | 🟡 Warning | A DSPM for AI DLP policy that is deployed but explicitly disabled |
+| Rule | Severity   | What it detects                                                                             |
+|------|------------|---------------------------------------------------------------------------------------------|
+| P1   | 🟡 Warning | A DSPM for AI policy that has not been deployed in this tenant at all                      |
+| P2   | 🟡 Warning | A DSPM for AI DLP policy that is deployed but in test mode — it logs but does not enforce  |
+| P3   | 🟡 Warning | A DSPM for AI DLP policy that is deployed but explicitly disabled                          |
 
 ### Audit Retention Rules
 
-| Rule | Severity | What it detects |
-|---|---|---|
-| A1 | 🔵 Info | No custom audit retention policy covering the `CopilotInteraction` record type |
+| Rule | Severity  | What it detects                                                                           |
+|------|-----------|-------------------------------------------------------------------------------------------|
+| A1   | 🔵 Info   | No custom audit retention policy covering the `CopilotInteraction` record type           |
 
 ### DLP Workload Rules
 
-| Rule | Severity | What it detects |
-|---|---|---|
-| D1 | 🟡 Warning | No enforced DLP policy scoped to the `CopilotInteractions` or `M365Copilot` workload |
+| Rule | Severity   | What it detects                                                                                         |
+|------|------------|---------------------------------------------------------------------------------------------------------|
+| D1   | 🟡 Warning | No enforced DLP policy scoped to the `CopilotInteractions` or `M365Copilot` workload                  |
 
 D1 fires when the tenant has no DLP policy that simultaneously targets a Copilot workload, is in `Enable` mode, and is enabled. Policies in test mode or disabled do not satisfy this check. Without such a policy, data submitted to Copilot is not evaluated against any DLP rules.
 
 ### Insider Risk Management Rules
 
-| Rule | Severity | What it detects |
-|---|---|---|
-| I1 | 🔵 Info | No active IRM policy using an AI-relevant template |
+| Rule | Severity | What it detects                                                      |
+|------|----------|----------------------------------------------------------------------|
+| I1   | 🔵 Info  | No active IRM policy using an AI-relevant template                  |
 
 I1 fires when no IRM policy with status `Active` uses one of the following templates: `RiskyAIUsage`, `DataLeak`, `DataLeakByPriorityUser`, or `DataTheftByDepartingEmployee`. These templates generate risk signals that DSPM for AI surfaces as AI-related insider risk. Without an active policy of this type, AI-related risk events are not scored or surfaced.
 
 ### Severity guide
 
-| Severity | Meaning |
-|---|---|
-| 🟡 Warning | A protection gap that leaves AI interactions unprotected or unmonitored. Review and remediate. |
-| 🔵 Info | Informational. No immediate action required, but worth reviewing for long-term governance. |
+| Severity   | Meaning                                                                                                    |
+|------------|------------------------------------------------------------------------------------------------------------|
+| 🟡 Warning | A protection gap that leaves AI interactions unprotected or unmonitored. Review and remediate.            |
+| 🔵 Info    | Informational. No immediate action required, but worth reviewing for long-term governance.                 |
 
 ### DSPM for AI Policy Inventory
 
@@ -177,16 +177,16 @@ The report includes a complete inventory table of the eight standard DSPM for AI
 
 **The eight standard DSPM for AI policies are:**
 
-| Policy | Type |
-|---|---|
-| DSPM for AI: Detect sensitive info added to AI sites | DLP |
-| DSPM for AI - Block sensitive info from AI sites | DLP |
-| DSPM for AI - Block elevated risk users from submitting prompts to AI apps in Microsoft Edge | DLP |
-| DSPM for AI - Block sensitive info from AI apps in Edge | DLP |
-| DSPM for AI - Protect sensitive data from Copilot processing | DLP |
-| DSPM for AI - Detect when users visit AI sites | IRM |
-| DSPM for AI - Detect risky AI usage | IRM |
-| DSPM for AI - Unethical behavior in AI apps | Communication Compliance |
+| Policy                                                                                       | Type                   |
+|----------------------------------------------------------------------------------------------|------------------------|
+| DSPM for AI: Detect sensitive info added to AI sites                                         | DLP                    |
+| DSPM for AI - Block sensitive info from AI sites                                             | DLP                    |
+| DSPM for AI - Block elevated risk users from submitting prompts to AI apps in Microsoft Edge | DLP                    |
+| DSPM for AI - Block sensitive info from AI apps in Edge                                      | DLP                    |
+| DSPM for AI - Protect sensitive data from Copilot processing                                 | DLP                    |
+| DSPM for AI - Detect when users visit AI sites                                               | IRM                    |
+| DSPM for AI - Detect risky AI usage                                                          | IRM                    |
+| DSPM for AI - Unethical behavior in AI apps                                                  | Communication Compliance |
 
 > **Legacy prefix note:** Policies created during preview may appear with the prefix `Microsoft AI Hub -` instead of `DSPM for AI -`. The script recognises both and treats them as equivalent.
 
@@ -194,23 +194,23 @@ The report includes a complete inventory table of the eight standard DSPM for AI
 
 Every report includes a **Collection Limitations** section listing settings that could not be exported by script and must be verified manually in the Purview portal. Walk the customer through each item in this section as part of the review. The items are:
 
-| Setting | Where to check |
-|---|---|
-| DSPM for AI collection policy status | Purview portal > DSPM for AI > Policies |
-| Data risk assessment results | Purview portal > DSPM for AI > Data risks |
-| Pay-as-you-go billing model enablement | Purview portal > DSPM for AI > Settings |
-| Device onboarding status | Microsoft Defender portal |
-| Browser extension deployment status | Microsoft Intune admin center |
-| Fabric data risk assessment prerequisites | Fabric Admin REST API |
+| Setting                                    | Where to check                         |
+|--------------------------------------------|----------------------------------------|
+| DSPM for AI collection policy status       | Purview portal > DSPM for AI > Policies |
+| Data risk assessment results               | Purview portal > DSPM for AI > Data risks |
+| Pay-as-you-go billing model enablement     | Purview portal > DSPM for AI > Settings |
+| Device onboarding status                   | Microsoft Defender portal              |
+| Browser extension deployment status       | Microsoft Intune admin center          |
+| Fabric data risk assessment prerequisites  | Fabric Admin REST API                  |
 
 ---
 
 ## All Parameters at a Glance
 
-| Parameter | Required | Default | What it does |
-|---|---|---|---|
-| `-InputPath` | **Yes** | — | Path to the Purview export JSON from `Get-PurviewAudit.ps1` |
-| `-OutputPath` | No | Current folder | Where to write the two output files (must be an existing folder) |
+| Parameter     | Required | Default        | What it does                                                              |
+|---------------|----------|----------------|---------------------------------------------------------------------------|
+| `-InputPath`  | **Yes**  | —              | Path to the Purview export JSON from `Get-PurviewAudit.ps1`              |
+| `-OutputPath` | No       | Current folder | Where to write the two output files (must be an existing folder)          |
 
 **Example with all parameters:**
 ```powershell

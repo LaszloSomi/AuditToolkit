@@ -6,13 +6,13 @@ This guide walks you through running `Invoke-CAAnalysis.ps1` — a script that r
 
 ## Requirements at a glance
 
-| Requirement | Detail |
-|---|---|
-| **Authentication** | None — fully offline |
-| **Roles required** | None |
-| **PowerShell modules** | None |
-| **PowerShell version** | 7.2 or later |
-| **Network access** | None |
+| Requirement            | Detail               |
+|------------------------|----------------------|
+| **Authentication**     | None — fully offline |
+| **Roles required**     | None                 |
+| **PowerShell modules** | None                 |
+| **PowerShell version** | 7.2 or later         |
+| **Network access**     | None                 |
 
 ---
 
@@ -133,23 +133,23 @@ Machine-readable output for import into ticketing systems, dashboards, or furthe
 
 The script checks every policy against seven rules. Here is what each rule means and why it matters for Copilot.
 
-| Rule | Severity | What it detects |
-|---|---|---|
-| R1 | 🔴 Critical | A policy that outright blocks access to Copilot for all users |
-| R2 | 🔴 Critical | A compliant device requirement that Copilot web experiences cannot satisfy |
-| R3 | 🟡 Warning | Sign-in frequency set to "every time", which breaks Copilot session continuity |
-| R4 | 🟡 Warning | A report-only policy that would cause R1, R2, or R3 if switched to enforced |
-| R5 | 🟡 Warning | Token protection (secure sign-in session binding), which Copilot does not support |
-| R6 | 🔵 Info | No MFA baseline policy covering all users and all applications |
-| R7 | 🔵 Info | A Copilot application ID explicitly named in a policy's include or exclude list |
+| Rule | Severity    | What it detects                                                                                                  |
+|------|-------------|------------------------------------------------------------------------------------------------------------------|
+| R1   | 🔴 Critical | A policy that outright blocks access to Copilot for all users                                                   |
+| R2   | 🔴 Critical | A compliant device requirement that Copilot web experiences cannot satisfy                                       |
+| R3   | 🟡 Warning  | Sign-in frequency set to "every time", which breaks Copilot session continuity                                  |
+| R4   | 🟡 Warning  | A report-only policy that would cause R1, R2, or R3 if switched to enforced                                     |
+| R5   | 🟡 Warning  | Token protection (secure sign-in session binding), which Copilot does not support                               |
+| R6   | 🔵 Info     | No MFA baseline policy covering all users and all applications                                                  |
+| R7   | 🔵 Info     | A Copilot application ID explicitly named in a policy's include or exclude list                                 |
 
 ### Severity guide
 
-| Severity | Meaning |
-|---|---|
-| 🔴 Critical | Copilot access will fail for the affected users. Address before enabling Copilot. |
-| 🟡 Warning | Copilot may fail or behave unexpectedly. Review and assess before enabling Copilot. |
-| 🔵 Info | Informational only. No immediate action required, but worth reviewing. |
+| Severity    | Meaning                                                                                      |
+|-------------|----------------------------------------------------------------------------------------------|
+| 🔴 Critical | Copilot access will fail for the affected users. Address before enabling Copilot.            |
+| 🟡 Warning  | Copilot may fail or behave unexpectedly. Review and assess before enabling Copilot.          |
+| 🔵 Info     | Informational only. No immediate action required, but worth reviewing.                       |
 
 ### Common finding — R4 (Report-Only Risk)
 
@@ -159,11 +159,11 @@ R4 is the most frequently seen finding. It means a policy is currently in **repo
 
 ## All Parameters at a Glance
 
-| Parameter | Required | Default | What it does |
-|---|---|---|---|
-| `-InputPath` | **Yes** | — | Path to the CA export JSON from `Get-CAAudit.ps1` |
-| `-CopilotAppIds` | No | Built-in list | Copilot app GUIDs to check for explicit policy scoping. Override for GCC High / DoD tenants. |
-| `-OutputPath` | No | Current folder | Where to write the two output files (must be an existing folder) |
+| Parameter        | Required | Default        | What it does                                                                                                 |
+|------------------|----------|----------------|--------------------------------------------------------------------------------------------------------------|
+| `-InputPath`     | **Yes**  | —              | Path to the CA export JSON from `Get-CAAudit.ps1`                                                           |
+| `-CopilotAppIds` | No       | Built-in list  | Copilot app GUIDs to check for explicit policy scoping. Override for GCC High / DoD tenants.                |
+| `-OutputPath`    | No       | Current folder | Where to write the two output files (must be an existing folder)                                             |
 
 **Example with all parameters:**
 ```powershell
