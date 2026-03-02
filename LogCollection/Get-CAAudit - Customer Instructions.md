@@ -6,15 +6,15 @@ This guide walks you through running `Get-CAAudit.ps1` — a script that exports
 
 ## Requirements at a glance
 
-| Requirement           | Detail                                                                                                                                        |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| **Authentication**    | Microsoft Graph — interactive browser sign-in or device code                                                                                 |
-| **Minimum role**      | Security Reader (Global Administrator not required)                                                                                           |
-| **Accepted roles**    | Conditional Access Administrator, Security Reader, Security Administrator, Global Reader, Global Administrator                                |
-| **Graph permissions** | `Policy.Read.All` (required) · `Directory.Read.All` (recommended — resolves GUIDs to display names)                                          |
-| **PowerShell modules** | `Microsoft.Graph.Authentication` · `Microsoft.Graph.Identity.SignIns`                                                                        |
-| **PowerShell version** | 7.2 or later                                                                                                                                  |
-| **Network access**    | Outbound HTTPS to `graph.microsoft.com` (or sovereign equivalent)                                                                            |
+| Requirement            | Detail                                                                                                         |
+|------------------------|----------------------------------------------------------------------------------------------------------------|
+| **Authentication**     | Microsoft Graph — interactive browser sign-in or device code                                                   |
+| **Minimum role**       | Security Reader (Global Administrator not required)                                                            |
+| **Accepted roles**     | Conditional Access Administrator, Security Reader, Security Administrator, Global Reader, Global Administrator |
+| **Graph permissions**  | `Policy.Read.All` (required) · `Directory.Read.All` (recommended — resolves GUIDs to display names)            |
+| **PowerShell modules** | `Microsoft.Graph.Authentication` · `Microsoft.Graph.Identity.SignIns`                                          |
+| **PowerShell version** | 7.2 or later                                                                                                   |
+| **Network access**     | Outbound HTTPS to `graph.microsoft.com` (or sovereign equivalent)                                              |
 
 ---
 
@@ -57,13 +57,13 @@ Both should return a result. If either returns nothing, re-run the `Install-Modu
 
 The account you sign in with must have one of the following Entra ID roles:
 
-| Role                              | Notes                               |
-|-----------------------------------|-------------------------------------|
-| Conditional Access Administrator  | Most targeted — recommended         |
-| Security Reader                   | Read-only access to security settings |
-| Security Administrator            | Broader security admin access       |
-| Global Reader                     | Read-only access to everything      |
-| Global Administrator              | Full access                         |
+| Role                             | Notes                                  |
+|----------------------------------|----------------------------------------|
+| Conditional Access Administrator | Most targeted — recommended            |
+| Security Reader                  | Read-only access to security settings  |
+| Security Administrator           | Broader security admin access          |
+| Global Reader                    | Read-only access to everything         |
+| Global Administrator             | Full access                            |
 
 You do not need to be a Global Administrator. A Security Reader is sufficient.
 
@@ -71,10 +71,10 @@ You do not need to be a Global Administrator. A Security Reader is sufficient.
 
 The script requests these two permissions when you sign in:
 
-| Permission             | Why it is needed                                                                                                |
-|------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `Policy.Read.All`      | Required — reads the CA policies                                                                                |
-| `Directory.Read.All`   | Recommended — resolves IDs to display names (e.g. turns a group GUID into "Executives")                        |
+| Permission           | Why it is needed                                                                         |
+|----------------------|------------------------------------------------------------------------------------------|
+| `Policy.Read.All`    | Required — reads the CA policies                                                         |
+| `Directory.Read.All` | Recommended — resolves IDs to display names (e.g. turns a group GUID into "Executives")  |
 
 On first run, Microsoft will ask you to consent to these permissions in a browser window. This is normal. If your tenant requires admin consent, a Global Administrator will need to grant consent once before you can run the script.
 
@@ -86,12 +86,12 @@ On first run, Microsoft will ask you to consent to these permissions in a browse
 
 Before running the script, confirm which Microsoft 365 environment your tenant is in. Use the table below:
 
-| If your tenant is…                              | Use this value |
-|-------------------------------------------------|----------------|
-| Standard Microsoft 365                          | `Commercial`   |
-| Microsoft 365 GCC (US Government Community Cloud) | `GCC`        |
-| Microsoft 365 GCC High                          | `GCCH`         |
-| Microsoft 365 / Azure DoD                       | `DoD`          |
+| If your tenant is…                                | Use this value |
+|---------------------------------------------------|----------------|
+| Standard Microsoft 365                            | `Commercial`   |
+| Microsoft 365 GCC (US Government Community Cloud) | `GCC`          |
+| Microsoft 365 GCC High                            | `GCCH`         |
+| Microsoft 365 / Azure DoD                         | `DoD`          |
 
 **Not sure?** If you sign in at `portal.microsoft.com`, you are almost certainly `Commercial`. If you sign in at `portal.azure.us`, you are `GCCH` or `DoD` — contact your licensing team to confirm which.
 
@@ -229,13 +229,13 @@ The file contains a metadata header followed by all policies:
 
 ## All Parameters at a Glance
 
-| Parameter             | Required | Default        | What it does                                                            |
-|-----------------------|----------|----------------|-------------------------------------------------------------------------|
-| `-UserPrincipalName`  | **Yes**  | —              | Your sign-in account (e.g. `admin@contoso.com`)                         |
-| `-Environment`        | No       | `Commercial`   | Cloud environment: `Commercial`, `GCC`, `GCCH`, or `DoD`               |
-| `-AuthFlow`           | No       | `Interactive`  | How to sign in: `Interactive` (browser) or `DeviceCode`                 |
-| `-OutputFormat`       | No       | `JSON`         | File format: `JSON` or `CSV`                                            |
-| `-OutputPath`         | No       | Current folder | Where to save the file (must be an existing folder)                     |
+| Parameter            | Required | Default        | What it does                                              |
+|----------------------|----------|----------------|-----------------------------------------------------------|
+| `-UserPrincipalName` | **Yes**  | —              | Your sign-in account (e.g. `admin@contoso.com`)           |
+| `-Environment`       | No       | `Commercial`   | Cloud environment: `Commercial`, `GCC`, `GCCH`, or `DoD`  |
+| `-AuthFlow`          | No       | `Interactive`  | How to sign in: `Interactive` (browser) or `DeviceCode`   |
+| `-OutputFormat`      | No       | `JSON`         | File format: `JSON` or `CSV`                              |
+| `-OutputPath`        | No       | Current folder | Where to save the file (must be an existing folder)       |
 
 **Example with all parameters specified:**
 ```powershell

@@ -6,14 +6,14 @@ This guide walks you through running `Get-PurviewAudit.ps1` — a script that ex
 
 ## Requirements at a glance
 
-| Requirement            | Detail                                                                                                       |
-|------------------------|--------------------------------------------------------------------------------------------------------------|
-| **Authentication**     | Security & Compliance PowerShell (`Connect-IPPSSession`) — interactive browser or device code               |
-| **Minimum role**       | Compliance Reader (built-in Purview role group)                                                              |
-| **Individual roles**   | `View-Only DLP Compliance Management` · `View-Only Insider Risk Management` · `View-Only Audit Logs`        |
-| **PowerShell module**  | `ExchangeOnlineManagement` 3.x or later                                                                      |
-| **PowerShell version** | 7.2 or later                                                                                                 |
-| **Network access**     | Outbound HTTPS to the Security & Compliance PowerShell endpoint for your environment                         |
+| Requirement            | Detail                                                                                                  |
+|------------------------|---------------------------------------------------------------------------------------------------------|
+| **Authentication**     | Security & Compliance PowerShell (`Connect-IPPSSession`) — interactive browser or device code           |
+| **Minimum role**       | Compliance Reader (built-in Purview role group)                                                         |
+| **Individual roles**   | `View-Only DLP Compliance Management` · `View-Only Insider Risk Management` · `View-Only Audit Logs`    |
+| **PowerShell module**  | `ExchangeOnlineManagement` 3.x or later                                                                 |
+| **PowerShell version** | 7.2 or later                                                                                            |
+| **Network access**     | Outbound HTTPS to the Security & Compliance PowerShell endpoint for your environment                    |
 
 ---
 
@@ -54,11 +54,11 @@ This should return a result with version 3.x or later. If it returns nothing, re
 
 The account you sign in with must hold at minimum the built-in **Compliance Reader** role in Microsoft Purview, or all three of the following roles:
 
-| Role                                    | What it covers                                          |
-|-----------------------------------------|---------------------------------------------------------|
-| `View-Only DLP Compliance Management`   | Reads Data Loss Prevention policies and rules           |
-| `View-Only Insider Risk Management`     | Reads Insider Risk Management settings and policies     |
-| `View-Only Audit Logs`                  | Reads audit log retention policies                      |
+| Role                                   | What it covers                                      |
+|----------------------------------------|-----------------------------------------------------|
+| `View-Only DLP Compliance Management`  | Reads Data Loss Prevention policies and rules       |
+| `View-Only Insider Risk Management`    | Reads Insider Risk Management settings and policies |
+| `View-Only Audit Logs`                 | Reads audit log retention policies                  |
 
 **How to check:** Go to Microsoft Purview portal → Settings → Roles and scopes → Role groups, and confirm the account is a member of the **Compliance Reader** group (or the three individual groups above).
 
@@ -70,12 +70,12 @@ The account you sign in with must hold at minimum the built-in **Compliance Read
 
 Before running the script, confirm which Microsoft 365 environment your tenant is in:
 
-| If your tenant is…                              | Use this value |
-|-------------------------------------------------|----------------|
-| Standard Microsoft 365                          | `Commercial`   |
-| Microsoft 365 GCC (US Government Community Cloud) | `GCC`        |
-| Microsoft 365 GCC High                          | `GCCH`         |
-| Microsoft 365 / Azure DoD                       | `DoD`          |
+| If your tenant is…                                | Use this value |
+|---------------------------------------------------|----------------|
+| Standard Microsoft 365                            | `Commercial`   |
+| Microsoft 365 GCC (US Government Community Cloud) | `GCC`          |
+| Microsoft 365 GCC High                            | `GCCH`         |
+| Microsoft 365 / Azure DoD                         | `DoD`          |
 
 **Not sure?** If you sign into the Purview portal at `compliance.microsoft.com`, you are almost certainly `Commercial`. If you use `compliance.microsoft.us`, you are `GCCH` or `DoD` — contact your licensing team to confirm.
 
@@ -218,12 +218,12 @@ The file contains a metadata header followed by your DLP policies, IRM settings,
 
 ## All Parameters at a Glance
 
-| Parameter            | Required | Default        | What it does                                                        |
-|----------------------|----------|----------------|---------------------------------------------------------------------|
-| `-UserPrincipalName` | **Yes**  | —              | Your sign-in account (e.g. `admin@contoso.com`)                     |
-| `-Environment`       | No       | `Commercial`   | Cloud environment: `Commercial`, `GCC`, `GCCH`, or `DoD`           |
-| `-AuthFlow`          | No       | `Interactive`  | How to sign in: `Interactive` (browser) or `DeviceCode`             |
-| `-OutputPath`        | No       | Current folder | Where to save the file (must be an existing folder)                 |
+| Parameter            | Required | Default        | What it does                                              |
+|----------------------|----------|----------------|-----------------------------------------------------------|
+| `-UserPrincipalName` | **Yes**  | —              | Your sign-in account (e.g. `admin@contoso.com`)           |
+| `-Environment`       | No       | `Commercial`   | Cloud environment: `Commercial`, `GCC`, `GCCH`, or `DoD`  |
+| `-AuthFlow`          | No       | `Interactive`  | How to sign in: `Interactive` (browser) or `DeviceCode`   |
+| `-OutputPath`        | No       | Current folder | Where to save the file (must be an existing folder)       |
 
 **Example with all parameters specified:**
 ```powershell
