@@ -47,7 +47,7 @@ function Import-PurviewExport {
 
     $raw = Get-Content -Path $Path -Raw -Encoding UTF8
     try {
-        $export = $raw | ConvertFrom-Json
+        $export = $raw | ConvertFrom-Json -AsHashtable
     } catch {
         throw "Failed to parse Purview export JSON: $_"
     }
