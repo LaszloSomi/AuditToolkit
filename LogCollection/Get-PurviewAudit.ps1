@@ -141,7 +141,7 @@ function Get-DlpPolicies {
     Write-Host "Retrieved $($policies.Count) DLP policy(s). Collecting rules..." -ForegroundColor Cyan
 
     $result = foreach ($policy in $policies) {
-        $rules = @(Get-DlpComplianceRule -Policy $policy.Name -ResultSize Unlimited -ErrorAction SilentlyContinue)
+        $rules = @(Get-DlpComplianceRule -Policy $policy.Name -ErrorAction SilentlyContinue)
         [PSCustomObject]@{
             policy = $policy
             rules  = $rules
